@@ -17,7 +17,7 @@ test.describe("contacts", () => {
 
     await expect(page).toHaveURL(/\/contacts\/(?!new(?:$|[/?]))[^/?#]+$/);
     await expect(page.getByRole("heading", { name: "Marc Petit" })).toBeVisible();
-    await expect(page.getByText("Client")).toBeVisible();
+    await expect(page.getByText("Client", { exact: true })).toBeVisible();
     await expect(page.getByText("Contact créé")).toBeVisible();
 
     await page.getByRole("link", { name: "Modifier" }).click();

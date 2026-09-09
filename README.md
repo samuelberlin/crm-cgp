@@ -2,6 +2,16 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 9 — Assistant IA (terminée)
+
+Trois fonctionnalités IA ciblées, appuyées sur l'API Claude (`@anthropic-ai/sdk`), déclenchées à la demande (aucun appel automatique, aucun coût caché) :
+
+- **Résumé client** et **rédaction de relance** : boutons sur la fiche contact (carte « Assistant IA »)
+- **Analyse d'opportunité** : bouton sur la page d'édition d'une opportunité
+- Construction des prompts entièrement pure et testée (`features/ai/prompts.ts`) : le texte envoyé au modèle est assemblé à partir des données réelles du contact/de l'opportunité (statut, patrimoine net, opportunités en cours, dernières activités), jamais inventé
+- Les 3 server actions (`features/ai/actions.ts`) réutilisent le même scoping par rôle que le reste de l'application (`contactWhere` / `opportunityWhere`) : un CGP ne peut générer du contenu IA que sur ses propres contacts/opportunités
+- **Dégradation explicite** : sans `ANTHROPIC_API_KEY` configurée (`lib/ai.ts#isAiConfigured`), chaque bouton affiche clairement « Fonctionnalité IA non configurée » plutôt que d'échouer silencieusement — c'est l'état par défaut de cet environnement de développement, couvert par un test E2E dédié (`tests/e2e/ai.spec.ts`)
+
 ## Étape 8 — Automatisations (terminée)
 
 Pas de cron/scheduler disponible dans cet environnement : les automatisations sont **événementielles** (déclenchées par une action utilisateur) ou **calculées à la lecture**, jamais par une tâche planifiée en arrière-plan.
@@ -154,6 +164,7 @@ features/dashboard/             # sélection de la prochaine meilleure action (p
 features/wealth/                # calcul brut/net (pur, testé), actions, formulaires
 features/documents/             # upload/validation, actions, formulaires
 features/automations/           # délais configurables, helper de création de tâche, calcul d'inactivité (pur, testé)
+features/ai/                    # assistant IA : construction de prompts (pur, testé), actions, bouton client
 lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
 prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, WealthItem, Document, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
@@ -167,7 +178,8 @@ docker-compose.yml            # PostgreSQL local
 - Mots de passe hachés et sessions gérées par `better-auth` (bibliothèque dédiée, pas de code maison).
 - Chaque rôle/tenant est vérifié **côté serveur** à chaque page/action (`requireUser`, `hasRole`) — le `proxy.ts` ne fait qu'une redirection UX rapide basée sur la présence du cookie, jamais l'autorité finale.
 - Les champs `role` et `tenantId` ne sont jamais acceptés depuis le client (`input: false` sur les additionalFields better-auth) ; ils sont positionnés côté serveur après création du compte.
-- Secrets (`BETTER_AUTH_SECRET`, `DATABASE_URL`) uniquement en variables d'environnement, jamais committés.
+- Secrets (`BETTER_AUTH_SECRET`, `DATABASE_URL`, `ANTHROPIC_API_KEY`) uniquement en variables d'environnement, jamais committés.
+- Les server actions IA rechargent le contact/l'opportunité via le même scoping par rôle que le reste de l'app avant de construire le prompt — un CGP ne peut pas déclencher une génération IA sur les données d'un autre conseiller.
 
 ## Points d'attention
 
@@ -176,4 +188,8 @@ docker-compose.yml            # PostgreSQL local
 
 ## Prochaine étape
 
-Étape 9 : ajouter l'IA (résumé client, rédaction de relance, analyse des opportunités).
+Les 9 étapes du plan initial sont terminées. Pistes possibles pour la suite, à valider avant tout développement :
+
+- Flux d'invitation pour ajouter des utilisateurs à un cabinet existant (cf. Points d'attention)
+- Recherche/filtres avancés sur les listes (contacts, opportunités, tâches)
+- Export de données (CSV/PDF)

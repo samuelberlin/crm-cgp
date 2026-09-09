@@ -22,6 +22,8 @@ import { DeleteWealthItemButton } from "@/features/wealth/DeleteWealthItemButton
 import { documentCategoryLabels } from "@/features/documents/schemas";
 import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
 import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
+import { generateContactSummary, generateFollowUpDraft } from "@/features/ai/actions";
+import { AiActionButton } from "@/features/ai/AiActionButton";
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -336,6 +338,24 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 ))}
               </ul>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Assistant IA</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <AiActionButton
+              label="Résumer ce client"
+              pendingLabel="Génération…"
+              action={generateContactSummary.bind(null, contact.id)}
+            />
+            <AiActionButton
+              label="Rédiger une relance"
+              pendingLabel="Rédaction…"
+              action={generateFollowUpDraft.bind(null, contact.id)}
+            />
           </CardContent>
         </Card>
 

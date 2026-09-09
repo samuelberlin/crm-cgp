@@ -5,6 +5,8 @@ import { requireUser } from "@/features/auth/session";
 import { canAssignAdvisor } from "@/features/auth/permissions";
 import { opportunityWhere } from "@/features/opportunities/access";
 import { EditOpportunityForm } from "@/features/opportunities/EditOpportunityForm";
+import { generateOpportunityAnalysis } from "@/features/ai/actions";
+import { AiActionButton } from "@/features/ai/AiActionButton";
 
 export default async function EditOpportunityPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -37,6 +39,19 @@ export default async function EditOpportunityPage({ params }: { params: Promise<
         </CardHeader>
         <CardContent>
           <EditOpportunityForm opportunity={opportunity} advisors={advisors} />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Assistant IA</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AiActionButton
+            label="Analyser cette opportunité"
+            pendingLabel="Analyse…"
+            action={generateOpportunityAnalysis.bind(null, opportunity.id)}
+          />
         </CardContent>
       </Card>
     </div>

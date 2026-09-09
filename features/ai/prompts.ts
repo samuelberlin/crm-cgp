@@ -1,0 +1,124 @@
+import { formatCurrency, formatDate } from "@/lib/format";
+import { contactStatusLabels } from "@/features/contacts/schemas";
+import { opportunityCategoryLabels, opportunityStageLabels } from "@/features/opportunities/schemas";
+
+const SYSTEM_PERSONA =
+  "Tu es l'assistant d'un Conseiller en Gestion de Patrimoine (CGP) français. " +
+  "Tu réponds toujours en français, de façon concise et professionnelle, sans inventer d'information " +
+  "qui ne figure pas dans le contexte fourni.";
+
+export type ContactSummaryInput = {
+  firstName: string;
+  lastName: string;
+  status: keyof typeof contactStatusLabels;
+  company: string | null;
+  potential: number | null;
+  source: string | null;
+  notes: string | null;
+  wealthNet: number;
+  openOpportunities: { title: string; stage: keyof typeof opportunityStageLabels; amount: number | null }[];
+  recentActivities: { label: string; createdAt: Date }[];
+};
+
+export function buildContactSummaryPrompt(contact: ContactSummaryInput): { system: string; prompt: string } {
+  const lines = [
+    `Client : ${contact.firstName} ${contact.lastName}`,
+    `Statut : ${contactStatusLabels[contact.status]}`,
+    `Société : ${contact.company ?? "—"}`,
+    `Potentiel estimé : ${formatCurrency(contact.potential)}`,
+    `Source : ${contact.source ?? "—"}`,
+    `Patrimoine net connu : ${formatCurrency(contact.wealthNet)}`,
+    `Notes générales : ${contact.notes ?? "—"}`,
+    "",
+    "Opportunités en cours :",
+    ...(contact.openOpportunities.length === 0
+      ? ["Aucune"]
+      : contact.openOpportunities.map(
+          (o) => `- ${o.title} (${opportunityStageLabels[o.stage]}, ${formatCurrency(o.amount)})`,
+        )),
+    "",
+    "Dernières activités :",
+    ...(contact.recentActivities.length === 0
+      ? ["Aucune"]
+      : contact.recentActivities.map((a) => `- ${formatDate(a.createdAt)} : ${a.label}`)),
+  ];
+
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "Rédige un résumé du client ci-dessous en 3 à 5 puces courtes, à destination du conseiller " +
+      "(situation, opportunités en cours, point d'attention éventuel). Pas d'introduction, pas de conclusion.\n\n" +
+      lines.join("\n"),
+  };
+}
+
+export type FollowUpInput = {
+  firstName: string;
+  lastName: string;
+  status: keyof typeof contactStatusLabels;
+  nextAction: string | null;
+  nextContactAt: Date | null;
+  lastActivity: { label: string; createdAt: Date } | null;
+  openOpportunities: { title: string; stage: keyof typeof opportunityStageLabels }[];
+};
+
+export function buildFollowUpPrompt(contact: FollowUpInput): { system: string; prompt: string } {
+  const lines = [
+    `Client : ${contact.firstName} ${contact.lastName}`,
+    `Statut : ${contactStatusLabels[contact.status]}`,
+    `Prochaine action prévue : ${contact.nextAction ?? "—"}${contact.nextContactAt ? ` (${formatDate(contact.nextContactAt)})` : ""}`,
+    `Dernière activité : ${contact.lastActivity ? `${contact.lastActivity.label} (${formatDate(contact.lastActivity.createdAt)})` : "Aucune"}`,
+    "Opportunités en cours :",
+    ...(contact.openOpportunities.length === 0
+      ? ["Aucune"]
+      : contact.openOpportunities.map((o) => `- ${o.title} (${opportunityStageLabels[o.stage]})`)),
+  ];
+
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "Rédige un court message de relance (email) à envoyer à ce client par son conseiller, en te basant " +
+      "uniquement sur les informations ci-dessous. Ton professionnel et chaleureux, 4 à 6 phrases, " +
+      "avec un objet d'email en première ligne (préfixé par « Objet : »).\n\n" +
+      lines.join("\n"),
+  };
+}
+
+export type OpportunityAnalysisInput = {
+  title: string;
+  category: keyof typeof opportunityCategoryLabels;
+  stage: keyof typeof opportunityStageLabels;
+  amount: number | null;
+  probability: number;
+  note: string | null;
+  contactFirstName: string;
+  contactLastName: string;
+  contactPotential: number | null;
+  wealthNet: number;
+};
+
+export function buildOpportunityAnalysisPrompt(opportunity: OpportunityAnalysisInput): {
+  system: string;
+  prompt: string;
+} {
+  const lines = [
+    `Opportunité : ${opportunity.title}`,
+    `Catégorie : ${opportunityCategoryLabels[opportunity.category]}`,
+    `Étape : ${opportunityStageLabels[opportunity.stage]}`,
+    `Montant : ${formatCurrency(opportunity.amount)}`,
+    `Probabilité : ${opportunity.probability}%`,
+    `Note : ${opportunity.note ?? "—"}`,
+    `Client : ${opportunity.contactFirstName} ${opportunity.contactLastName}`,
+    `Potentiel estimé du client : ${formatCurrency(opportunity.contactPotential)}`,
+    `Patrimoine net connu du client : ${formatCurrency(opportunity.wealthNet)}`,
+  ];
+
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "Analyse cette opportunité commerciale pour le conseiller : évalue en une phrase la probabilité " +
+      "réaliste de conclusion, identifie un risque ou point de vigilance, et propose une prochaine étape " +
+      "concrète. Réponds en 3 puces courtes maximum.\n\n" +
+      lines.join("\n"),
+  };
+}
