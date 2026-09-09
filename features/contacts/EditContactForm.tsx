@@ -7,7 +7,12 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { updateContact, type ContactFormState } from "./actions";
-import { contactStatusLabels, contactStatusValues } from "./schemas";
+import {
+  contactStatusLabels,
+  contactStatusValues,
+  maritalStatusLabels,
+  maritalStatusValues,
+} from "./schemas";
 
 const initialState: ContactFormState = null;
 
@@ -36,6 +41,8 @@ export function EditContactForm({
     nextContactAt: Date | null;
     birthDate: Date | null;
     profession: string | null;
+    address: string | null;
+    postalCode: string | null;
     city: string | null;
     maritalStatus: string | null;
     advisorId: string | null;
@@ -137,16 +144,31 @@ export function EditContactForm({
             <Input id="profession" name="profession" defaultValue={contact.profession ?? ""} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="city">Ville</Label>
-            <Input id="city" name="city" defaultValue={contact.city ?? ""} />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="birthDate">Date de naissance</Label>
             <Input id="birthDate" name="birthDate" type="date" defaultValue={toDateInputValue(contact.birthDate)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="maritalStatus">Situation familiale</Label>
-            <Input id="maritalStatus" name="maritalStatus" defaultValue={contact.maritalStatus ?? ""} />
+            <NativeSelect id="maritalStatus" name="maritalStatus" defaultValue={contact.maritalStatus ?? ""}>
+              <option value="">Non renseignée</option>
+              {maritalStatusValues.map((value) => (
+                <option key={value} value={value}>
+                  {maritalStatusLabels[value]}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Adresse</Label>
+            <Input id="address" name="address" defaultValue={contact.address ?? ""} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="postalCode">Code postal</Label>
+            <Input id="postalCode" name="postalCode" defaultValue={contact.postalCode ?? ""} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city">Ville</Label>
+            <Input id="city" name="city" defaultValue={contact.city ?? ""} />
           </div>
         </div>
       </div>

@@ -19,6 +19,9 @@ test.describe("assistant IA", () => {
     await page.getByRole("button", { name: "Rédiger une relance" }).click();
     await expect(page.getByText(NOT_CONFIGURED_TEXT).nth(1)).toBeVisible();
 
+    await page.getByRole("button", { name: "Suggérer des opportunités" }).click();
+    await expect(page.getByText(NOT_CONFIGURED_TEXT).nth(2)).toBeVisible();
+
     await page.getByRole("link", { name: "Créer opportunité" }).click();
     await page.getByLabel("Titre").fill("PER Marc");
     await page.getByRole("button", { name: "Créer l'opportunité" }).click();

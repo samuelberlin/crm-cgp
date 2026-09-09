@@ -2,14 +2,22 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
-## Produits et multi-équipement (hors plan initial)
+## Fonctionnalités ajoutées après le plan initial
 
-Fonctionnalité ajoutée à la demande, après les 9 étapes du plan initial.
+### Produits et multi-équipement
 
 - Modèles `Product` (catalogue par cabinet) et `Subscription` (souscription d'un client à un produit, avec encours)
 - **Catalogue produits créé automatiquement** à la création d'un cabinet (`features/products/defaultCatalog.ts`), pré-rempli avec les **23 produits SwissLife** effectivement commercialisés — extrait de la grille de commissions Agents Généraux fournie — répartis en 5 catégories (Prévoyance, Santé, Retraite, Épargne, **Dommages**) — gérable ensuite depuis **Paramètres** (ajout, activation/désactivation, réservé ADMIN)
 - Fiche contact : section **Produits souscrits** — ajout rapide (produit + encours + date), résiliation, et deux indicateurs calculés à la volée (`features/subscriptions/calc.ts`, pur et testé) : **multi-équipement** (nombre de produits actifs) et **encours total**
 - Chaque souscription/résiliation est tracée dans la timeline du contact, comme le reste des activités
+
+### Fiche contact enrichie
+
+- **Adresse postale** (rue, code postal, ville) et **situation familiale** à choix fixe (Célibataire, Marié(e), Pacsé(e), Union libre, Divorcé(e), Veuf/Veuve) plutôt qu'un champ texte libre
+
+### 4e fonctionnalité IA : suggestions d'opportunités
+
+- Bouton **« Suggérer des opportunités »** sur la fiche contact (`features/ai/actions.ts#generateOpportunitySuggestions`) : croise le patrimoine du client, les produits déjà souscrits, le catalogue des produits non souscrits, et les opportunités déjà ouvertes, pour proposer 2-3 pistes commerciales concrètes sans jamais dupliquer l'existant — même discipline que les 3 autres boutons IA (prompt pur et testé, scoping par rôle, dégradation explicite sans clé API)
 
 ## Étape 9 — Assistant IA (terminée)
 

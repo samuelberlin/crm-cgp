@@ -95,8 +95,10 @@ export async function updateContact(
     nextContactAt: formData.get("nextContactAt"),
     birthDate: formData.get("birthDate"),
     profession: formData.get("profession"),
+    address: formData.get("address"),
+    postalCode: formData.get("postalCode"),
     city: formData.get("city"),
-    maritalStatus: formData.get("maritalStatus"),
+    maritalStatus: formData.get("maritalStatus") || undefined,
     advisorId: formData.get("advisorId"),
   });
   if (!parsed.success) {

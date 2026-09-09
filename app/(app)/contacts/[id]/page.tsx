@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { contactStatusLabels } from "@/features/contacts/schemas";
+import { contactStatusLabels, maritalStatusLabels } from "@/features/contacts/schemas";
 import { pipelineTotals, weightedValue } from "@/features/opportunities/calc";
 import { opportunityStageLabels } from "@/features/opportunities/schemas";
 import { taskPriorityLabels } from "@/features/tasks/schemas";
@@ -22,7 +22,11 @@ import { DeleteWealthItemButton } from "@/features/wealth/DeleteWealthItemButton
 import { documentCategoryLabels } from "@/features/documents/schemas";
 import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
 import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
-import { generateContactSummary, generateFollowUpDraft } from "@/features/ai/actions";
+import {
+  generateContactSummary,
+  generateFollowUpDraft,
+  generateOpportunitySuggestions,
+} from "@/features/ai/actions";
 import { AiActionButton } from "@/features/ai/AiActionButton";
 import { multiEquipementCount, totalEncours } from "@/features/subscriptions/calc";
 import { AddSubscriptionForm } from "@/features/subscriptions/AddSubscriptionForm";
@@ -166,9 +170,19 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           <CardContent className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
             <Row label="Société" value={contact.company ?? "—"} />
             <Row label="Profession" value={contact.profession ?? "—"} />
-            <Row label="Ville" value={contact.city ?? "—"} />
+            <Row
+              label="Adresse"
+              value={[contact.address, contact.postalCode, contact.city].filter(Boolean).join(" ") || "—"}
+            />
             <Row label="Date de naissance" value={formatDate(contact.birthDate)} />
-            <Row label="Situation familiale" value={contact.maritalStatus ?? "—"} />
+            <Row
+              label="Situation familiale"
+              value={
+                contact.maritalStatus && contact.maritalStatus in maritalStatusLabels
+                  ? maritalStatusLabels[contact.maritalStatus as keyof typeof maritalStatusLabels]
+                  : "—"
+              }
+            />
             <Row label="Email" value={contact.email ?? "—"} />
             <Row label="Téléphone" value={contact.phone ?? "—"} />
             {contact.notes && (
@@ -411,6 +425,11 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               label="Rédiger une relance"
               pendingLabel="Rédaction…"
               action={generateFollowUpDraft.bind(null, contact.id)}
+            />
+            <AiActionButton
+              label="Suggérer des opportunités"
+              pendingLabel="Analyse…"
+              action={generateOpportunitySuggestions.bind(null, contact.id)}
             />
           </CardContent>
         </Card>

@@ -3,10 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
+import { maritalStatusLabels } from "@/features/contacts/schemas";
 import { opportunityWhere } from "@/features/opportunities/access";
 import { wealthTotals } from "@/features/wealth/calc";
+import { wealthCategoryLabels } from "@/features/wealth/schemas";
 import { generateCompletion, isAiConfigured } from "@/lib/ai";
-import { buildContactSummaryPrompt, buildFollowUpPrompt, buildOpportunityAnalysisPrompt } from "./prompts";
+import {
+  buildContactSummaryPrompt,
+  buildFollowUpPrompt,
+  buildOpportunityAnalysisPrompt,
+  buildOpportunitySuggestionsPrompt,
+} from "./prompts";
 
 export type AiResult = { text: string } | { error: string };
 
@@ -72,6 +79,52 @@ export async function generateFollowUpDraft(contactId: string): Promise<AiResult
       ? { label: contact.activities[0].label, createdAt: contact.activities[0].createdAt }
       : null,
     openOpportunities: contact.opportunities.map((o) => ({ title: o.title, stage: o.stage })),
+  });
+
+  try {
+    const text = await generateCompletion(system, prompt);
+    return { text };
+  } catch {
+    return { error: GENERATION_ERROR };
+  }
+}
+
+export async function generateOpportunitySuggestions(contactId: string): Promise<AiResult> {
+  if (!isAiConfigured()) return { error: NOT_CONFIGURED_ERROR };
+
+  const session = await requireUser();
+  const [contact, catalog] = await Promise.all([
+    prisma.contact.findFirst({
+      where: { id: contactId, ...contactWhere(session.user) },
+      include: {
+        wealthItems: true,
+        opportunities: { where: { stage: { notIn: ["GAGNE", "PERDU"] } } },
+        subscriptions: { where: { status: "ACTIVE" }, include: { product: true } },
+      },
+    }),
+    session.user.tenantId
+      ? prisma.product.findMany({ where: { tenantId: session.user.tenantId, active: true } })
+      : Promise.resolve([]),
+  ]);
+  if (!contact) return { error: "Contact introuvable." };
+
+  const subscribedProductIds = new Set(contact.subscriptions.map((s) => s.productId));
+
+  const { prompt, system } = buildOpportunitySuggestionsPrompt({
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    status: contact.status,
+    profession: contact.profession,
+    maritalStatus:
+      contact.maritalStatus && contact.maritalStatus in maritalStatusLabels
+        ? (contact.maritalStatus as keyof typeof maritalStatusLabels)
+        : null,
+    potential: contact.potential,
+    wealthNet: wealthTotals(contact.wealthItems).net,
+    wealthCategories: [...new Set(contact.wealthItems.map((item) => wealthCategoryLabels[item.category]))],
+    subscribedProducts: contact.subscriptions.map((s) => s.product.name),
+    availableProducts: catalog.filter((p) => !subscribedProductIds.has(p.id)).map((p) => p.name),
+    openOpportunityTitles: contact.opportunities.map((o) => o.title),
   });
 
   try {

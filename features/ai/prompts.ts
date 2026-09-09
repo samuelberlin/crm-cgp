@@ -1,5 +1,5 @@
 import { formatCurrency, formatDate } from "@/lib/format";
-import { contactStatusLabels } from "@/features/contacts/schemas";
+import { contactStatusLabels, maritalStatusLabels } from "@/features/contacts/schemas";
 import { opportunityCategoryLabels, opportunityStageLabels } from "@/features/opportunities/schemas";
 
 const SYSTEM_PERSONA =
@@ -119,6 +119,61 @@ export function buildOpportunityAnalysisPrompt(opportunity: OpportunityAnalysisI
       "Analyse cette opportunité commerciale pour le conseiller : évalue en une phrase la probabilité " +
       "réaliste de conclusion, identifie un risque ou point de vigilance, et propose une prochaine étape " +
       "concrète. Réponds en 3 puces courtes maximum.\n\n" +
+      lines.join("\n"),
+  };
+}
+
+export type OpportunitySuggestionsInput = {
+  firstName: string;
+  lastName: string;
+  status: keyof typeof contactStatusLabels;
+  profession: string | null;
+  maritalStatus: keyof typeof maritalStatusLabels | null;
+  potential: number | null;
+  wealthNet: number;
+  wealthCategories: string[];
+  subscribedProducts: string[];
+  availableProducts: string[];
+  openOpportunityTitles: string[];
+};
+
+export function buildOpportunitySuggestionsPrompt(contact: OpportunitySuggestionsInput): {
+  system: string;
+  prompt: string;
+} {
+  const lines = [
+    `Client : ${contact.firstName} ${contact.lastName}`,
+    `Statut : ${contactStatusLabels[contact.status]}`,
+    `Profession : ${contact.profession ?? "—"}`,
+    `Situation familiale : ${contact.maritalStatus ? maritalStatusLabels[contact.maritalStatus] : "—"}`,
+    `Potentiel estimé : ${formatCurrency(contact.potential)}`,
+    `Patrimoine net connu : ${formatCurrency(contact.wealthNet)}`,
+    `Catégories de patrimoine détenues : ${
+      contact.wealthCategories.length > 0 ? contact.wealthCategories.join(", ") : "Aucune connue"
+    }`,
+    "",
+    "Produits déjà souscrits par ce client :",
+    ...(contact.subscribedProducts.length === 0 ? ["Aucun"] : contact.subscribedProducts.map((p) => `- ${p}`)),
+    "",
+    "Produits du catalogue non souscrits par ce client :",
+    ...(contact.availableProducts.length === 0
+      ? ["Aucun"]
+      : contact.availableProducts.map((p) => `- ${p}`)),
+    "",
+    "Opportunités commerciales déjà ouvertes (ne jamais les dupliquer) :",
+    ...(contact.openOpportunityTitles.length === 0
+      ? ["Aucune"]
+      : contact.openOpportunityTitles.map((t) => `- ${t}`)),
+  ];
+
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "À partir du profil du client ci-dessous, propose 2 à 3 pistes commerciales concrètes et réalistes : " +
+      "des produits du catalogue non encore souscrits, en expliquant en une phrase pourquoi chacun est " +
+      "pertinent pour ce profil précis. Ne propose jamais un produit déjà souscrit ni une opportunité déjà " +
+      "ouverte. Si aucune piste sérieuse ne se dégage des informations disponibles, dis-le simplement plutôt " +
+      "que d'inventer. Réponds en liste à puces courtes, sans introduction ni conclusion.\n\n" +
       lines.join("\n"),
   };
 }

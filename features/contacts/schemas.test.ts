@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createContactSchema } from "./schemas";
+import { createContactSchema, updateContactSchema } from "./schemas";
 
 describe("createContactSchema", () => {
   it("accepts the minimal fast-creation fields", () => {
@@ -42,6 +42,44 @@ describe("createContactSchema", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.status).toBe("PROSPECT");
+    }
+  });
+});
+
+describe("updateContactSchema", () => {
+  it("accepts a valid marital status and address", () => {
+    const result = updateContactSchema.safeParse({
+      firstName: "Jean",
+      lastName: "Moreau",
+      status: "CLIENT",
+      maritalStatus: "MARIE",
+      address: "12 rue de la Paix",
+      postalCode: "75002",
+      city: "Paris",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an invalid marital status", () => {
+    const result = updateContactSchema.safeParse({
+      firstName: "Jean",
+      lastName: "Moreau",
+      status: "CLIENT",
+      maritalStatus: "AUTRE",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an empty marital status", () => {
+    const result = updateContactSchema.safeParse({
+      firstName: "Jean",
+      lastName: "Moreau",
+      status: "CLIENT",
+      maritalStatus: "",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.maritalStatus).toBeUndefined();
     }
   });
 });

@@ -97,6 +97,8 @@ model Contact {
 
   birthDate     DateTime?
   profession    String?
+  address       String?
+  postalCode    String?
   city          String?
   maritalStatus String?
 

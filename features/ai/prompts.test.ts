@@ -3,6 +3,7 @@ import {
   buildContactSummaryPrompt,
   buildFollowUpPrompt,
   buildOpportunityAnalysisPrompt,
+  buildOpportunitySuggestionsPrompt,
 } from "./prompts";
 
 describe("buildContactSummaryPrompt", () => {
@@ -83,5 +84,51 @@ describe("buildOpportunityAnalysisPrompt", () => {
     expect(prompt).toContain("Retraite");
     expect(prompt).toContain("60%");
     expect(prompt).toContain("Marc Petit");
+  });
+});
+
+describe("buildOpportunitySuggestionsPrompt", () => {
+  it("includes the client profile, holdings, and gaps", () => {
+    const { prompt } = buildOpportunitySuggestionsPrompt({
+      firstName: "Marc",
+      lastName: "Petit",
+      status: "CLIENT",
+      profession: "Artisan",
+      maritalStatus: "MARIE",
+      potential: 50000,
+      wealthNet: 120000,
+      wealthCategories: ["Immobilier", "Financier"],
+      subscribedProducts: ["SwissLife Prévoyance TNS"],
+      availableProducts: ["SwissLife PER Individuel", "SwissLife Retraite"],
+      openOpportunityTitles: ["PER Marc"],
+    });
+
+    expect(prompt).toContain("Marc Petit");
+    expect(prompt).toContain("Marié(e)");
+    expect(prompt).toContain("Artisan");
+    expect(prompt).toContain("Immobilier, Financier");
+    expect(prompt).toContain("SwissLife Prévoyance TNS");
+    expect(prompt).toContain("SwissLife PER Individuel");
+    expect(prompt).toContain("PER Marc");
+  });
+
+  it("renders empty lists explicitly rather than an empty section", () => {
+    const { prompt } = buildOpportunitySuggestionsPrompt({
+      firstName: "Alice",
+      lastName: "Nouvel",
+      status: "PROSPECT",
+      profession: null,
+      maritalStatus: null,
+      potential: null,
+      wealthNet: 0,
+      wealthCategories: [],
+      subscribedProducts: [],
+      availableProducts: [],
+      openOpportunityTitles: [],
+    });
+
+    expect(prompt).toContain("Aucune connue");
+    expect(prompt).toContain("Produits déjà souscrits par ce client :\nAucun");
+    expect(prompt).toContain("Opportunités commerciales déjà ouvertes (ne jamais les dupliquer) :\nAucune");
   });
 });

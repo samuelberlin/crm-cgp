@@ -23,11 +23,17 @@ test.describe("contacts", () => {
     await page.getByRole("link", { name: "Modifier" }).click();
     await page.getByLabel("Société").fill("Petit & Associés");
     await page.getByLabel("Potentiel estimé (€)").fill("50000");
+    await page.getByLabel("Situation familiale").selectOption("MARIE");
+    await page.getByLabel("Adresse").fill("12 rue de la Paix");
+    await page.getByLabel("Code postal").fill("75002");
+    await page.getByLabel("Ville").fill("Paris");
     await page.getByRole("button", { name: "Enregistrer" }).click();
 
     await expect(page).toHaveURL(/\/contacts\/(?!new(?:$|[/?]))[^/?#]+$/);
     await expect(page.getByText("Petit & Associés")).toBeVisible();
     await expect(page.getByText(/50.?000.?€/)).toBeVisible();
+    await expect(page.getByText("Marié(e)")).toBeVisible();
+    await expect(page.getByText("12 rue de la Paix 75002 Paris")).toBeVisible();
 
     await page.goto("/contacts");
     await expect(page.getByRole("link", { name: "Marc Petit" })).toBeVisible();
