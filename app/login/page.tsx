@@ -1,18 +1,21 @@
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCurrentSession } from "@/features/auth/session";
+import { LoginForm } from "@/features/auth/LoginForm";
 
-export default function Home() {
+export default async function LoginPage() {
+  const session = await getCurrentSession();
+  if (session) redirect("/");
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-8">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>CRM CGP</CardTitle>
-          <CardDescription>
-            Étape 1 : projet configuré (Next.js, Tailwind, shadcn/ui, Prisma, Zod, tests).
-          </CardDescription>
+          <CardDescription>Connectez-vous à votre cabinet.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button>Prêt pour l&apos;étape 2</Button>
+          <LoginForm />
         </CardContent>
       </Card>
     </div>

@@ -15,6 +15,9 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      BETTER_AUTH_URL: `http://localhost:${PORT}`,
+    },
   },
   projects: [
     {
