@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { getTenantId, login, logout, moveToTenantAsCgp, registerCabinet } from "./helpers";
-
-async function createContact(page: import("@playwright/test").Page, firstName: string, lastName: string) {
-  await page.goto("/contacts/new");
-  await page.getByLabel("Prénom").fill(firstName);
-  await page.getByLabel("Nom", { exact: true }).fill(lastName);
-  await page.getByRole("button", { name: "Créer le contact" }).click();
-  await expect(page).toHaveURL(/\/contacts\/.+/);
-}
+import {
+  contactDetailUrlPattern,
+  createContact,
+  getTenantId,
+  login,
+  logout,
+  moveToTenantAsCgp,
+  registerCabinet,
+} from "./helpers";
 
 test.describe("opportunities", () => {
   test("create an opportunity from a contact, see it in the pipeline, and change its stage", async ({
@@ -27,7 +27,7 @@ test.describe("opportunities", () => {
     await page.getByLabel("Probabilité (%)").fill("60");
     await page.getByRole("button", { name: "Créer l'opportunité" }).click();
 
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(contactDetailUrlPattern);
     await expect(page.getByRole("link", { name: "PER Marc" })).toBeVisible();
     await expect(page.getByText(/24.?000.?€/).first()).toBeVisible(); // 40000 * 60%
     await expect(page.getByText("Opportunité créée : PER Marc")).toBeVisible();
@@ -42,7 +42,7 @@ test.describe("opportunities", () => {
     await page.getByLabel("Étape").selectOption("QUALIFIE");
     await page.getByRole("button", { name: "Enregistrer" }).click();
 
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(contactDetailUrlPattern);
     await expect(page.getByText("Étape : Nouveau → Qualifié")).toBeVisible();
   });
 
@@ -57,7 +57,7 @@ test.describe("opportunities", () => {
     await page.getByRole("link", { name: "Créer opportunité" }).click();
     await page.getByLabel("Titre").fill("Opportunité Alice");
     await page.getByRole("button", { name: "Créer l'opportunité" }).click();
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(contactDetailUrlPattern);
 
     await logout(page);
     await registerCabinet(page, { cabinetName: "Cabinet Bob Pipeline", name: "Bob CGP", email: cgpEmail });
@@ -73,7 +73,7 @@ test.describe("opportunities", () => {
     await page.getByRole("link", { name: "Créer opportunité" }).click();
     await page.getByLabel("Titre").fill("Opportunité Bob");
     await page.getByRole("button", { name: "Créer l'opportunité" }).click();
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(contactDetailUrlPattern);
 
     await page.goto("/opportunities");
     await expect(page.getByText("Opportunité Bob")).toBeVisible();

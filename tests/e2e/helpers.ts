@@ -57,3 +57,16 @@ export async function logout(page: Page) {
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await expect(page).toHaveURL("/login");
 }
+
+// Matches a contact detail URL (a real id), but not the "/contacts/new" form
+// page — a plain /\/contacts\/.+/ would match "new" too and let assertions
+// pass before the actual redirect happens.
+export const contactDetailUrlPattern = /\/contacts\/(?!new(?:$|[/?]))[^/?#]+$/;
+
+export async function createContact(page: Page, firstName: string, lastName: string) {
+  await page.goto("/contacts/new");
+  await page.getByLabel("Prénom").fill(firstName);
+  await page.getByLabel("Nom", { exact: true }).fill(lastName);
+  await page.getByRole("button", { name: "Créer le contact" }).click();
+  await expect(page).toHaveURL(contactDetailUrlPattern);
+}

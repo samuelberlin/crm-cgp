@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { emptyToUndefined } from "@/lib/zod-helpers";
 
 export const contactStatusValues = ["PROSPECT", "CLIENT", "ANCIEN_CLIENT", "PARTENAIRE"] as const;
 
@@ -8,8 +9,6 @@ export const contactStatusLabels: Record<(typeof contactStatusValues)[number], s
   ANCIEN_CLIENT: "Ancien client",
   PARTENAIRE: "Partenaire",
 };
-
-const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 
 export const createContactSchema = z.object({
   firstName: z.string().trim().min(1, "Le prénom est requis."),

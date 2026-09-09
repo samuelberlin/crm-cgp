@@ -25,6 +25,9 @@ model Tenant {
   users         User[]
   contacts      Contact[]
   opportunities Opportunity[]
+  tasks         Task[]
+  meetings      Meeting[]
+  notes         Note[]
   activities    Activity[]
 
   @@map("tenant")
@@ -45,6 +48,9 @@ model User {
   accounts      Account[]
   contacts      Contact[]
   opportunities Opportunity[]
+  tasks         Task[]
+  meetings      Meeting[]
+  notes         Note[]
   activities    Activity[]
 
   @@unique([email])
@@ -88,6 +94,9 @@ model Contact {
 
   activities    Activity[]
   opportunities Opportunity[]
+  tasks         Task[]
+  meetings      Meeting[]
+  contactNotes  Note[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -137,6 +146,7 @@ model Opportunity {
   advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
 
   activities Activity[]
+  tasks      Task[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -147,10 +157,106 @@ model Opportunity {
   @@map("opportunity")
 }
 
+enum TaskPriority {
+  HAUTE
+  NORMALE
+  BASSE
+}
+
+enum TaskStatus {
+  A_FAIRE
+  EN_COURS
+  TERMINEE
+}
+
+model Task {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  title    String
+  priority TaskPriority @default(NORMALE)
+  status   TaskStatus   @default(A_FAIRE)
+  dueDate  DateTime?
+
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  advisorId String?
+  advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([advisorId])
+  @@map("task")
+}
+
+enum MeetingStatus {
+  PLANIFIE
+  REALISE
+  ANNULE
+}
+
+model Meeting {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  date     DateTime
+  location String?
+  notes    String?
+  status   MeetingStatus @default(PLANIFIE)
+
+  advisorId String?
+  advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([advisorId])
+  @@map("meeting")
+}
+
+model Note {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  content String
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("note")
+}
+
 enum ActivityType {
   CONTACT_CREATED
   OPPORTUNITY_CREATED
   OPPORTUNITY_STAGE_CHANGED
+  TASK_CREATED
+  TASK_COMPLETED
+  MEETING_SCHEDULED
+  MEETING_COMPLETED
+  NOTE_ADDED
 }
 
 model Activity {

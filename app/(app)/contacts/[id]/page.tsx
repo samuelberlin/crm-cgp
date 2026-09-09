@@ -10,6 +10,10 @@ import { contactWhere } from "@/features/contacts/access";
 import { contactStatusLabels } from "@/features/contacts/schemas";
 import { pipelineTotals, weightedValue } from "@/features/opportunities/calc";
 import { opportunityStageLabels } from "@/features/opportunities/schemas";
+import { taskPriorityLabels } from "@/features/tasks/schemas";
+import { StatusSelect as TaskStatusSelect } from "@/features/tasks/StatusSelect";
+import { StatusSelect as MeetingStatusSelect } from "@/features/agenda/StatusSelect";
+import { NoteQuickForm } from "@/features/notes/NoteQuickForm";
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -21,6 +25,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       advisor: true,
       activities: { orderBy: { createdAt: "desc" }, include: { user: true } },
       opportunities: { orderBy: { createdAt: "desc" } },
+      tasks: { orderBy: { dueDate: "asc" } },
+      meetings: { orderBy: { date: "desc" } },
+      contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
     },
   });
 
@@ -58,6 +65,18 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Créer opportunité
+          </Link>
+          <Link
+            href={`/tasks/new?contactId=${contact.id}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Ajouter une tâche
+          </Link>
+          <Link
+            href={`/agenda/new?contactId=${contact.id}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Planifier rendez-vous
           </Link>
           <Link href={`/contacts/${contact.id}/edit`} className={buttonVariants({ size: "sm" })}>
             Modifier
@@ -123,9 +142,84 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <Row label="Téléphone" value={contact.phone ?? "—"} />
             {contact.notes && (
               <div className="col-span-full pt-2">
-                <p className="text-muted-foreground">Notes</p>
+                <p className="text-muted-foreground">Notes générales</p>
                 <p className="mt-1 whitespace-pre-wrap">{contact.notes}</p>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tâches</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {contact.tasks.length === 0 ? (
+              <p className="text-muted-foreground">Aucune tâche.</p>
+            ) : (
+              <ul className="space-y-2">
+                {contact.tasks.map((task) => (
+                  <li key={task.id} className="flex items-center justify-between gap-2">
+                    <div>
+                      <Link href={`/tasks/${task.id}/edit`} className="hover:underline">
+                        {task.title}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">
+                        {taskPriorityLabels[task.priority]} · {formatDate(task.dueDate)}
+                      </p>
+                    </div>
+                    <TaskStatusSelect taskId={task.id} status={task.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rendez-vous</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {contact.meetings.length === 0 ? (
+              <p className="text-muted-foreground">Aucun rendez-vous.</p>
+            ) : (
+              <ul className="space-y-2">
+                {contact.meetings.map((meeting) => (
+                  <li key={meeting.id} className="flex items-center justify-between gap-2">
+                    <div>
+                      <Link href={`/agenda/${meeting.id}/edit`} className="hover:underline">
+                        {formatDateTime(meeting.date)}
+                      </Link>
+                      {meeting.location && (
+                        <p className="text-xs text-muted-foreground">{meeting.location}</p>
+                      )}
+                    </div>
+                    <MeetingStatusSelect meetingId={meeting.id} status={meeting.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <NoteQuickForm contactId={contact.id} />
+            {contact.contactNotes.length > 0 && (
+              <ul className="space-y-3 border-t pt-3 text-sm">
+                {contact.contactNotes.map((note) => (
+                  <li key={note.id}>
+                    <p className="whitespace-pre-wrap">{note.content}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {note.user?.name ?? "—"} · {formatDateTime(note.createdAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
             )}
           </CardContent>
         </Card>

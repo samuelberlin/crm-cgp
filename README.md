@@ -2,6 +2,18 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 5 — Tâches, agenda, notes (terminée)
+
+- Modèles `Task` (priorité, statut, échéance, liée à un contact et/ou une opportunité), `Meeting` (rendez-vous), `Note`
+- **Tâches** (`/tasks`) : vues filtrées Aujourd'hui / Cette semaine / En retard / Toutes (`features/tasks/views.ts`, pur et testé), changement de statut en un clic
+- **Agenda** (`/agenda`) : rendez-vous à venir / passés, changement de statut (Planifié → Réalisé/Annulé) ; un rendez-vous réalisé propose « Ajouter un compte-rendu »
+- **Notes** : ajout rapide directement depuis la fiche contact (aucune page dédiée, conforme à l'esprit « note en 2 secondes »)
+- Actions rapides complètes sur la fiche contact : Appeler, Email, Créer opportunité, Ajouter une tâche, Planifier rendez-vous — les 6 actions prévues dès le départ
+- Timeline enrichie : création/complétion de tâche, planification/réalisation de rendez-vous, ajout de note
+- **Navigation finale à 6 sections** : Dashboard, Contacts, Opportunités, Agenda, Tâches, Paramètres
+- Même isolation par rôle partagée (`advisorScopedWhere`) pour les tâches et les rendez-vous
+- Un bug de validation (`FormData.get()` renvoie `null` et non `""` pour un champ absent du formulaire, ce que Zod refuse) a été corrigé une fois pour toutes via `lib/zod-helpers.ts#emptyToUndefined`, réutilisé par tous les schémas de formulaires
+
 ## Étape 4 — Opportunités (terminée)
 
 - Modèle `Opportunity` : catégorie (investissement, retraite, immobilier, assurance, fiscalité, transmission, autre), montant, probabilité, étape (7 étapes : nouveau → qualifié → rendez-vous → proposition → négociation → gagné/perdu), date estimée, note, prochaine action
@@ -95,22 +107,23 @@ Disponible sur [http://localhost:3000](http://localhost:3000). Créez votre prem
 ```
 app/                        # routes Next.js (App Router)
   login/, register/         # pages publiques
-  (app)/                    # shell protégé (sidebar) : dashboard, settings, contacts
+  (app)/                    # shell protégé (sidebar) : dashboard, contacts, opportunities, agenda, tasks, settings
   api/auth/[...all]/        # handler better-auth
 components/ui/               # composants shadcn/ui
 components/Sidebar.tsx       # navigation de l'app
 features/auth/               # schémas Zod, actions, session, permissions (dont advisorScopedWhere partagé)
 features/contacts/           # schémas Zod, isolation par rôle, actions, formulaires
 features/opportunities/      # schémas Zod, isolation par rôle, calcul pipeline, actions, formulaires
-lib/                          # prisma client, auth (serveur/client), format...
-prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Activity + modèles better-auth)
+features/tasks/               # schémas Zod, isolation par rôle, vues filtrées, actions, formulaires
+features/agenda/              # schémas Zod, isolation par rôle, actions, formulaires
+features/notes/                # schéma Zod, action de création, formulaire rapide
+lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
+prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
 proxy.ts                      # protection des routes (ex-middleware.ts, Next 16)
 tests/e2e/                    # tests Playwright (helpers.ts : utilitaires partagés entre les specs)
 docker-compose.yml            # PostgreSQL local
 ```
-
-Le code métier des prochaines étapes (tâches, agenda) sera organisé de la même façon sous `/features`.
 
 ## Sécurité
 
@@ -126,4 +139,4 @@ Le code métier des prochaines étapes (tâches, agenda) sera organisé de la m�
 
 ## Prochaine étape
 
-Étape 5 : tâches, agenda, notes.
+Étape 6 : dashboard (aujourd'hui, relances, pipeline, « prochaine meilleure action »), en n'affichant que des données réellement disponibles.

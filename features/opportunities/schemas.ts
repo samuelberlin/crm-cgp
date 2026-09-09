@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { emptyToUndefined } from "@/lib/zod-helpers";
 
 export const opportunityCategoryValues = [
   "INVESTISSEMENT",
@@ -39,8 +40,6 @@ export const opportunityStageLabels: Record<(typeof opportunityStageValues)[numb
   GAGNE: "Gagné",
   PERDU: "Perdu",
 };
-
-const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 
 export const createOpportunitySchema = z.object({
   contactId: z.string().trim().min(1, "Le contact est requis."),

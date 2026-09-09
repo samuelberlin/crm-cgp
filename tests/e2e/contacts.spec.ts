@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { getTenantId, login, logout, moveToTenantAsCgp, registerCabinet } from "./helpers";
+import { createContact, getTenantId, login, logout, moveToTenantAsCgp, registerCabinet } from "./helpers";
 
 test.describe("contacts", () => {
   test("create, view timeline, and edit a contact", async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe("contacts", () => {
     await page.getByLabel("Source").fill("Recommandation");
     await page.getByRole("button", { name: "Créer le contact" }).click();
 
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(/\/contacts\/(?!new(?:$|[/?]))[^/?#]+$/);
     await expect(page.getByRole("heading", { name: "Marc Petit" })).toBeVisible();
     await expect(page.getByText("Client")).toBeVisible();
     await expect(page.getByText("Contact créé")).toBeVisible();
@@ -25,7 +25,7 @@ test.describe("contacts", () => {
     await page.getByLabel("Potentiel estimé (€)").fill("50000");
     await page.getByRole("button", { name: "Enregistrer" }).click();
 
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await expect(page).toHaveURL(/\/contacts\/(?!new(?:$|[/?]))[^/?#]+$/);
     await expect(page.getByText("Petit & Associés")).toBeVisible();
     await expect(page.getByText(/50.?000.?€/)).toBeVisible();
 
@@ -40,11 +40,7 @@ test.describe("contacts", () => {
     await registerCabinet(page, { cabinetName: "Cabinet Isolation", name: "Alice Admin", email: adminEmail });
     const tenantId = await getTenantId(adminEmail);
 
-    await page.goto("/contacts/new");
-    await page.getByLabel("Prénom").fill("Client");
-    await page.getByLabel("Nom", { exact: true }).fill("DAlice");
-    await page.getByRole("button", { name: "Créer le contact" }).click();
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await createContact(page, "Client", "DAlice");
 
     await logout(page);
 
@@ -58,11 +54,7 @@ test.describe("contacts", () => {
     await page.goto("/contacts");
     await expect(page.getByText("Aucun contact pour le moment.")).toBeVisible();
 
-    await page.goto("/contacts/new");
-    await page.getByLabel("Prénom").fill("Client");
-    await page.getByLabel("Nom", { exact: true }).fill("DeBob");
-    await page.getByRole("button", { name: "Créer le contact" }).click();
-    await expect(page).toHaveURL(/\/contacts\/.+/);
+    await createContact(page, "Client", "DeBob");
 
     await page.goto("/contacts");
     await expect(page.getByRole("link", { name: "Client DeBob" })).toBeVisible();
