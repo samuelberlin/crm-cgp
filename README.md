@@ -2,6 +2,15 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 7 — Patrimoine simplifié et documents (terminée)
+
+- Modèle `WealthItem` : actif (immobilier, financier, liquidités, professionnel, autre) ou passif (crédit, autre dette), avec calcul **brut / passif / net** à la volée (`features/wealth/calc.ts`, pur et testé), jamais stocké
+- Section **Patrimoine** sur la fiche contact : deux formulaires d'ajout rapide (actif / passif), suppression en un clic
+- Modèle `Document` : upload, aperçu, téléchargement, suppression, associé à une catégorie (Identité, Fiscalité, Patrimoine, Contrats, Autre)
+- Fichiers stockés directement en base PostgreSQL (`bytea`, limite 5 Mo) — pas de dépendance de stockage externe (S3, etc.) à configurer
+- Route `GET /api/documents/[id]` protégée par l'isolation par rôle du contact associé ; seuls les PDF et images sont servis en aperçu (`Content-Disposition: inline`), tout le reste est forcé en téléchargement (`attachment`) pour éviter qu'un fichier uploadé (ex. HTML) ne s'exécute dans le contexte de l'application — en-tête `X-Content-Type-Options: nosniff` systématique
+- OCR volontairement non développé (prévu par l'architecture — bytes + type MIME conservés tels quels — mais hors périmètre du MVP)
+
 ## Étape 6 — Dashboard (terminée)
 
 Dashboard entièrement piloté par les données réelles (aucune valeur fictive) :
@@ -130,8 +139,10 @@ features/tasks/               # schémas Zod, isolation par rôle, vues filtrée
 features/agenda/              # schémas Zod, isolation par rôle, actions, formulaires
 features/notes/                # schéma Zod, action de création, formulaire rapide
 features/dashboard/             # sélection de la prochaine meilleure action (pur, testé)
+features/wealth/                # calcul brut/net (pur, testé), actions, formulaires
+features/documents/             # upload/validation, actions, formulaires
 lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
-prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, Activity + modèles better-auth)
+prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, WealthItem, Document, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
 proxy.ts                      # protection des routes (ex-middleware.ts, Next 16)
 tests/e2e/                    # tests Playwright (helpers.ts : utilitaires partagés entre les specs)
@@ -152,4 +163,4 @@ docker-compose.yml            # PostgreSQL local
 
 ## Prochaine étape
 
-Étape 7 : patrimoine simplifié (brut/net) et documents.
+Étape 8 : automatisations (relances, tâches automatiques, alertes d'inactivité).

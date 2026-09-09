@@ -29,6 +29,8 @@ model Tenant {
   meetings      Meeting[]
   notes         Note[]
   activities    Activity[]
+  wealthItems   WealthItem[]
+  documents     Document[]
 
   @@map("tenant")
 }
@@ -52,6 +54,7 @@ model User {
   meetings      Meeting[]
   notes         Note[]
   activities    Activity[]
+  documents     Document[]
 
   @@unique([email])
   @@index([tenantId])
@@ -97,6 +100,8 @@ model Contact {
   tasks         Task[]
   meetings      Meeting[]
   contactNotes  Note[]
+  wealthItems   WealthItem[]
+  documents     Document[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -277,6 +282,74 @@ model Activity {
   @@index([contactId])
   @@index([opportunityId])
   @@map("activity")
+}
+
+enum WealthKind {
+  ACTIF
+  PASSIF
+}
+
+enum WealthCategory {
+  IMMOBILIER
+  FINANCIER
+  LIQUIDITES
+  PROFESSIONNEL
+  AUTRE
+  CREDIT
+  AUTRE_DETTE
+}
+
+model WealthItem {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  kind     WealthKind
+  category WealthCategory
+  label    String?
+  amount   Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("wealth_item")
+}
+
+enum DocumentCategory {
+  IDENTITE
+  FISCALITE
+  PATRIMOINE
+  CONTRATS
+  AUTRE
+}
+
+model Document {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  name     String
+  category DocumentCategory @default(AUTRE)
+  mimeType String
+  size     Int
+  data     Bytes
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("document")
 }
 
 model Session {

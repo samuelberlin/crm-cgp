@@ -14,6 +14,14 @@ import { taskPriorityLabels } from "@/features/tasks/schemas";
 import { StatusSelect as TaskStatusSelect } from "@/features/tasks/StatusSelect";
 import { StatusSelect as MeetingStatusSelect } from "@/features/agenda/StatusSelect";
 import { NoteQuickForm } from "@/features/notes/NoteQuickForm";
+import { wealthTotals } from "@/features/wealth/calc";
+import { assetCategoryValues, liabilityCategoryValues, wealthCategoryLabels } from "@/features/wealth/schemas";
+import { createAsset, createLiability } from "@/features/wealth/actions";
+import { AddWealthItemForm } from "@/features/wealth/AddWealthItemForm";
+import { DeleteWealthItemButton } from "@/features/wealth/DeleteWealthItemButton";
+import { documentCategoryLabels } from "@/features/documents/schemas";
+import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
+import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -28,12 +36,17 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       tasks: { orderBy: { dueDate: "asc" } },
       meetings: { orderBy: { date: "desc" } },
       contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
+      wealthItems: { orderBy: { createdAt: "desc" } },
+      documents: { orderBy: { createdAt: "desc" } },
     },
   });
 
   if (!contact) notFound();
 
   const commercialTotals = pipelineTotals(contact.opportunities);
+  const patrimonyTotals = wealthTotals(contact.wealthItems);
+  const assets = contact.wealthItems.filter((item) => item.kind === "ACTIF");
+  const liabilities = contact.wealthItems.filter((item) => item.kind === "PASSIF");
 
   return (
     <div className="max-w-3xl">
@@ -217,6 +230,108 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {note.user?.name ?? "—"} · {formatDateTime(note.createdAt)}
                     </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Patrimoine</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <Row label="Patrimoine brut" value={formatCurrency(patrimonyTotals.gross)} />
+              <Row label="Passif" value={formatCurrency(patrimonyTotals.liabilities)} />
+              <Row label="Patrimoine net" value={formatCurrency(patrimonyTotals.net)} />
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="mb-2 text-sm font-medium">Actifs</p>
+              {assets.length > 0 && (
+                <ul className="mb-3 space-y-1.5 text-sm">
+                  {assets.map((item) => (
+                    <li key={item.id} className="flex items-center justify-between gap-2">
+                      <span>
+                        {wealthCategoryLabels[item.category]}
+                        {item.label ? ` — ${item.label}` : ""}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-3">
+                        {formatCurrency(item.amount)}
+                        <DeleteWealthItemButton itemId={item.id} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <AddWealthItemForm
+                contactId={contact.id}
+                categories={assetCategoryValues}
+                action={createAsset}
+                submitLabel="Ajouter un actif"
+              />
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="mb-2 text-sm font-medium">Passif</p>
+              {liabilities.length > 0 && (
+                <ul className="mb-3 space-y-1.5 text-sm">
+                  {liabilities.map((item) => (
+                    <li key={item.id} className="flex items-center justify-between gap-2">
+                      <span>
+                        {wealthCategoryLabels[item.category]}
+                        {item.label ? ` — ${item.label}` : ""}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-3">
+                        {formatCurrency(item.amount)}
+                        <DeleteWealthItemButton itemId={item.id} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <AddWealthItemForm
+                contactId={contact.id}
+                categories={liabilityCategoryValues}
+                action={createLiability}
+                submitLabel="Ajouter un passif"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Documents</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <UploadDocumentForm contactId={contact.id} />
+            {contact.documents.length > 0 && (
+              <ul className="space-y-2 border-t pt-3 text-sm">
+                {contact.documents.map((doc) => (
+                  <li key={doc.id} className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{doc.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {documentCategoryLabels[doc.category]} · {formatDate(doc.createdAt)}
+                      </p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-3 text-xs">
+                      <a
+                        href={`/api/documents/${doc.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Aperçu
+                      </a>
+                      <a href={`/api/documents/${doc.id}?download=1`} className="text-primary hover:underline">
+                        Télécharger
+                      </a>
+                      <DeleteDocumentButton documentId={doc.id} />
+                    </span>
                   </li>
                 ))}
               </ul>
