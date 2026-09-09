@@ -2,6 +2,17 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 3 — Contacts (terminée)
+
+- Modèle `Contact` (prospect / client / ancien client / partenaire) et `Activity` (timeline)
+- Création rapide (`/contacts/new`) : prénom, nom, téléphone, email, statut, source — puis ouverture automatique de la fiche
+- Fiche contact (`/contacts/[id]`) : en-tête (statut, conseiller), actions rapides (Appeler, Email), sections Relation / Commercial / Informations complémentaires, timeline unifiée
+- Édition complète (`/contacts/[id]/edit`) : tous les champs, réassignation du conseiller réservée à ADMIN/MANAGER
+- **Isolation par rôle**, vérifiée côté serveur sur chaque requête (`features/contacts/access.ts`) :
+  - `ADMIN` / `MANAGER` : tous les contacts du cabinet
+  - `CGP` : uniquement les contacts qui lui sont assignés
+- Chaque contact créé est automatiquement assigné à son créateur
+
 ## Étape 2 — Authentification, cabinets, rôles (terminée)
 
 - **better-auth** (email + mot de passe), stable, adapté à Next 16 / React 19 / Prisma 7
@@ -73,20 +84,21 @@ Disponible sur [http://localhost:3000](http://localhost:3000). Créez votre prem
 ```
 app/                        # routes Next.js (App Router)
   login/, register/         # pages publiques
-  (app)/                    # shell protégé (sidebar) : dashboard, settings
+  (app)/                    # shell protégé (sidebar) : dashboard, settings, contacts
   api/auth/[...all]/        # handler better-auth
 components/ui/               # composants shadcn/ui
 components/Sidebar.tsx       # navigation de l'app
 features/auth/               # schémas Zod, actions, session, permissions, formulaires
+features/contacts/           # schémas Zod, isolation par rôle (access.ts), actions, formulaires
 lib/                          # prisma client, auth (serveur/client), format...
-prisma/                       # schema.prisma (Tenant, User, Role + modèles better-auth)
+prisma/                       # schema.prisma (Tenant, User, Contact, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
 proxy.ts                      # protection des routes (ex-middleware.ts, Next 16)
 tests/e2e/                    # tests Playwright
 docker-compose.yml            # PostgreSQL local
 ```
 
-Le code métier des prochaines étapes (contacts, opportunités, tâches, agenda) sera organisé de la même façon sous `/features`.
+Le code métier des prochaines étapes (opportunités, tâches, agenda) sera organisé de la même façon sous `/features`.
 
 ## Sécurité
 
@@ -102,4 +114,4 @@ Le code métier des prochaines étapes (contacts, opportunités, tâches, agenda
 
 ## Prochaine étape
 
-Étape 3 : contacts (fiche contact, timeline), premier module métier réel.
+Étape 4 : opportunités (pipeline Kanban, calcul de la valeur pondérée).

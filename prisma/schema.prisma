@@ -19,31 +19,100 @@ enum Role {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  users     User[]
+  id         String     @id @default(cuid())
+  name       String
+  createdAt  DateTime   @default(now())
+  users      User[]
+  contacts   Contact[]
+  activities Activity[]
 
   @@map("tenant")
 }
 
 model User {
-  id            String    @id
+  id            String     @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  role          Role      @default(CGP)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  role          Role       @default(CGP)
   tenantId      String?
-  tenant        Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions      Session[]
   accounts      Account[]
+  contacts      Contact[]
+  activities    Activity[]
 
   @@unique([email])
   @@index([tenantId])
   @@map("user")
+}
+
+enum ContactStatus {
+  PROSPECT
+  CLIENT
+  ANCIEN_CLIENT
+  PARTENAIRE
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  company   String?
+  status    ContactStatus @default(PROSPECT)
+  source    String?
+  potential Float?
+  notes     String?
+
+  nextAction    String?
+  lastContactAt DateTime?
+  nextContactAt DateTime?
+
+  birthDate     DateTime?
+  profession    String?
+  city          String?
+  maritalStatus String?
+
+  advisorId String?
+  advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
+
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([advisorId])
+  @@map("contact")
+}
+
+enum ActivityType {
+  CONTACT_CREATED
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  tenantId  String
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type      ActivityType
+  label     String
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("activity")
 }
 
 model Session {
