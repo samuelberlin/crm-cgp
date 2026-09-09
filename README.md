@@ -2,6 +2,15 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Produits et multi-équipement (hors plan initial)
+
+Fonctionnalité ajoutée à la demande, après les 9 étapes du plan initial.
+
+- Modèles `Product` (catalogue par cabinet) et `Subscription` (souscription d'un client à un produit, avec encours)
+- **Catalogue produits créé automatiquement** à la création d'un cabinet (`features/products/defaultCatalog.ts`), pré-rempli avec les 5 produits SwissLife effectivement commercialisés (Prévoyance TNS, Santé Particuliers & Madelin, Prévoyance Indépendants, Retraite, Stratégic Premium) — gérable ensuite depuis **Paramètres** (ajout, activation/désactivation, réservé ADMIN)
+- Fiche contact : section **Produits souscrits** — ajout rapide (produit + encours + date), résiliation, et deux indicateurs calculés à la volée (`features/subscriptions/calc.ts`, pur et testé) : **multi-équipement** (nombre de produits actifs) et **encours total**
+- Chaque souscription/résiliation est tracée dans la timeline du contact, comme le reste des activités
+
 ## Étape 9 — Assistant IA (terminée)
 
 Trois fonctionnalités IA ciblées, appuyées sur l'API Claude (`@anthropic-ai/sdk`), déclenchées à la demande (aucun appel automatique, aucun coût caché) :
@@ -165,8 +174,10 @@ features/wealth/                # calcul brut/net (pur, testé), actions, formul
 features/documents/             # upload/validation, actions, formulaires
 features/automations/           # délais configurables, helper de création de tâche, calcul d'inactivité (pur, testé)
 features/ai/                    # assistant IA : construction de prompts (pur, testé), actions, bouton client
+features/products/              # catalogue produits (seed par défaut, actions, formulaires ADMIN)
+features/subscriptions/         # souscriptions client : calcul encours/multi-équipement (pur, testé), actions, formulaires
 lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
-prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, WealthItem, Document, Activity + modèles better-auth)
+prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, WealthItem, Document, Product, Subscription, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
 proxy.ts                      # protection des routes (ex-middleware.ts, Next 16)
 tests/e2e/                    # tests Playwright (helpers.ts : utilitaires partagés entre les specs)

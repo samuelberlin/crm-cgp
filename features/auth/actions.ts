@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { defaultProductCatalog } from "@/features/products/defaultCatalog";
 import { registerSchema } from "./schemas";
 
 export type RegisterState = { error: string } | null;
@@ -32,6 +33,10 @@ export async function registerTenant(
   }
 
   const tenant = await prisma.tenant.create({ data: { name: cabinetName } });
+
+  await prisma.product.createMany({
+    data: defaultProductCatalog.map((product) => ({ ...product, tenantId: tenant.id })),
+  });
 
   try {
     await auth.api.signUpEmail({

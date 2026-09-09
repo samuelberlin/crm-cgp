@@ -31,6 +31,8 @@ model Tenant {
   activities    Activity[]
   wealthItems   WealthItem[]
   documents     Document[]
+  products      Product[]
+  subscriptions Subscription[]
 
   // Délais d'automatisation (en jours), configurables depuis Paramètres.
   firstContactDelayDays      Int @default(1)
@@ -108,6 +110,7 @@ model Contact {
   contactNotes  Note[]
   wealthItems   WealthItem[]
   documents     Document[]
+  subscriptions Subscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -268,6 +271,8 @@ enum ActivityType {
   MEETING_SCHEDULED
   MEETING_COMPLETED
   NOTE_ADDED
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_CANCELLED
 }
 
 model Activity {
@@ -324,6 +329,62 @@ model WealthItem {
   @@index([tenantId])
   @@index([contactId])
   @@map("wealth_item")
+}
+
+enum ProductCategory {
+  PREVOYANCE
+  SANTE
+  RETRAITE
+  EPARGNE
+}
+
+model Product {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String
+  category    ProductCategory
+  provider    String?
+  description String?
+  active      Boolean @default(true)
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("product")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  ANNULE
+}
+
+model Subscription {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  encours      Float    @default(0)
+  subscribedAt DateTime @default(now())
+  status       SubscriptionStatus @default(ACTIVE)
+  note         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([productId])
+  @@map("subscription")
 }
 
 enum DocumentCategory {

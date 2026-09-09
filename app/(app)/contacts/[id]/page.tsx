@@ -24,24 +24,38 @@ import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
 import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
 import { generateContactSummary, generateFollowUpDraft } from "@/features/ai/actions";
 import { AiActionButton } from "@/features/ai/AiActionButton";
+import { multiEquipementCount, totalEncours } from "@/features/subscriptions/calc";
+import { AddSubscriptionForm } from "@/features/subscriptions/AddSubscriptionForm";
+import { CancelSubscriptionButton } from "@/features/subscriptions/CancelSubscriptionButton";
+import { productCategoryLabels } from "@/features/products/schemas";
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
   const { id } = await params;
 
-  const contact = await prisma.contact.findFirst({
-    where: { id, ...contactWhere(session.user) },
-    include: {
-      advisor: true,
-      activities: { orderBy: { createdAt: "desc" }, include: { user: true } },
-      opportunities: { orderBy: { createdAt: "desc" } },
-      tasks: { orderBy: { dueDate: "asc" } },
-      meetings: { orderBy: { date: "desc" } },
-      contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
-      wealthItems: { orderBy: { createdAt: "desc" } },
-      documents: { orderBy: { createdAt: "desc" } },
-    },
-  });
+  const [contact, availableProducts] = await Promise.all([
+    prisma.contact.findFirst({
+      where: { id, ...contactWhere(session.user) },
+      include: {
+        advisor: true,
+        activities: { orderBy: { createdAt: "desc" }, include: { user: true } },
+        opportunities: { orderBy: { createdAt: "desc" } },
+        tasks: { orderBy: { dueDate: "asc" } },
+        meetings: { orderBy: { date: "desc" } },
+        contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
+        wealthItems: { orderBy: { createdAt: "desc" } },
+        documents: { orderBy: { createdAt: "desc" } },
+        subscriptions: { orderBy: { subscribedAt: "desc" }, include: { product: true } },
+      },
+    }),
+    session.user.tenantId
+      ? prisma.product.findMany({
+          where: { tenantId: session.user.tenantId, active: true },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   if (!contact) notFound();
 
@@ -49,6 +63,8 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const patrimonyTotals = wealthTotals(contact.wealthItems);
   const assets = contact.wealthItems.filter((item) => item.kind === "ACTIF");
   const liabilities = contact.wealthItems.filter((item) => item.kind === "PASSIF");
+  const equipementCount = multiEquipementCount(contact.subscriptions);
+  const encoursTotal = totalEncours(contact.subscriptions);
 
   return (
     <div className="max-w-3xl">
@@ -301,6 +317,46 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 submitLabel="Ajouter un passif"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Produits souscrits</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <Row label="Multi-équipement" value={`${equipementCount} produit${equipementCount > 1 ? "s" : ""}`} />
+              <Row label="Encours total" value={formatCurrency(encoursTotal)} />
+            </div>
+
+            {contact.subscriptions.length > 0 && (
+              <ul className="space-y-2 border-t pt-3 text-sm">
+                {contact.subscriptions.map((subscription) => (
+                  <li key={subscription.id} className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{subscription.product.name}</span>
+                        <Badge variant="outline">{productCategoryLabels[subscription.product.category]}</Badge>
+                        {subscription.status === "ANNULE" && <Badge variant="destructive">Résiliée</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Souscrit le {formatDate(subscription.subscribedAt)}
+                        {subscription.note ? ` · ${subscription.note}` : ""}
+                      </p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-3">
+                      {formatCurrency(subscription.encours)}
+                      {subscription.status === "ACTIVE" && (
+                        <CancelSubscriptionButton subscriptionId={subscription.id} />
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <AddSubscriptionForm contactId={contact.id} products={availableProducts} />
           </CardContent>
         </Card>
 
