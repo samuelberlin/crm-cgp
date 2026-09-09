@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pipelineTotals, weightedValue } from "./calc";
+import { pipelineTotals, weightedValue, wonTotal } from "./calc";
 
 describe("weightedValue", () => {
   it("multiplies amount by probability", () => {
@@ -30,5 +30,21 @@ describe("pipelineTotals", () => {
 
   it("returns zeros for an empty pipeline", () => {
     expect(pipelineTotals([])).toEqual({ total: 0, weighted: 0, count: 0 });
+  });
+});
+
+describe("wonTotal", () => {
+  it("sums only GAGNE opportunities", () => {
+    const total = wonTotal([
+      { amount: 10000, stage: "GAGNE" },
+      { amount: 5000, stage: "GAGNE" },
+      { amount: 20000, stage: "NEGOCIATION" },
+      { amount: 8000, stage: "PERDU" },
+    ]);
+    expect(total).toBe(15000);
+  });
+
+  it("returns 0 when nothing is won", () => {
+    expect(wonTotal([{ amount: 1000, stage: "NOUVEAU" }])).toBe(0);
   });
 });

@@ -150,3 +150,22 @@ export async function updateTaskStatus(
 
   revalidatePath("/tasks");
 }
+
+/** Pushes a task's due date one day forward (from today if it has none, or is already past). */
+export async function postponeTask(taskId: string): Promise<void> {
+  const session = await requireUser();
+  if (!session.user.tenantId) return;
+
+  const existing = await prisma.task.findFirst({ where: { id: taskId, ...taskWhere(session.user) } });
+  if (!existing) return;
+
+  const now = new Date();
+  const base = existing.dueDate && existing.dueDate > now ? existing.dueDate : now;
+  const next = new Date(base);
+  next.setDate(next.getDate() + 1);
+
+  await prisma.task.update({ where: { id: taskId }, data: { dueDate: next } });
+
+  revalidatePath("/");
+  revalidatePath("/tasks");
+}

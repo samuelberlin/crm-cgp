@@ -12,3 +12,10 @@ export function pipelineTotals(
   const weighted = open.reduce((sum, o) => sum + weightedValue(o.amount, o.probability), 0);
   return { total, weighted, count: open.length };
 }
+
+/** Sum of the amount of every won (GAGNE) opportunity — realized revenue. */
+export function wonTotal(opportunities: { amount: number | null; stage: string }[]): number {
+  return opportunities
+    .filter((o) => o.stage === "GAGNE")
+    .reduce((sum, o) => sum + (o.amount ?? 0), 0);
+}

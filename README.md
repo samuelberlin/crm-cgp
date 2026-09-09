@@ -2,6 +2,18 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 6 — Dashboard (terminée)
+
+Dashboard entièrement piloté par les données réelles (aucune valeur fictive) :
+
+- **Ma prochaine meilleure action** : le système propose toujours une seule action concrète — une tâche en retard, sinon une tâche du jour, sinon un contact dont la relance est due, sinon « Rien d'urgent aujourd'hui ». Logique de sélection pure et testée (`features/dashboard/nextBestAction.ts`), avec actions directes (Terminer/Reporter une tâche, Appeler/Email un contact)
+- **Tâches à venir** : les prochaines tâches non terminées, triées par échéance
+- **Relances** : les contacts dont la date de prochain contact est arrivée
+- **Pipeline** : entonnoir Nouveaux → Qualifiés → Propositions → Gagnés
+- **CA potentiel** : pipeline total, pipeline pondéré, CA gagné (`features/opportunities/calc.ts#wonTotal`)
+- **Opportunités prioritaires** : triées par valeur pondérée
+- Tout est filtré par le même scoping de rôle que le reste (CGP ne voit que ses propres données)
+
 ## Étape 5 — Tâches, agenda, notes (terminée)
 
 - Modèles `Task` (priorité, statut, échéance, liée à un contact et/ou une opportunité), `Meeting` (rendez-vous), `Note`
@@ -117,6 +129,7 @@ features/opportunities/      # schémas Zod, isolation par rôle, calcul pipelin
 features/tasks/               # schémas Zod, isolation par rôle, vues filtrées, actions, formulaires
 features/agenda/              # schémas Zod, isolation par rôle, actions, formulaires
 features/notes/                # schéma Zod, action de création, formulaire rapide
+features/dashboard/             # sélection de la prochaine meilleure action (pur, testé)
 lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
 prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
@@ -139,4 +152,4 @@ docker-compose.yml            # PostgreSQL local
 
 ## Prochaine étape
 
-Étape 6 : dashboard (aujourd'hui, relances, pipeline, « prochaine meilleure action »), en n'affichant que des données réellement disponibles.
+Étape 7 : patrimoine simplifié (brut/net) et documents.
