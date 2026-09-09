@@ -6,6 +6,7 @@ import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
 import { createSubscriptionSchema } from "./schemas";
 import { subscriptionWhere } from "./access";
+import { subscriptionFeedsWealth } from "./calc";
 
 export type SubscriptionFormState = { error: string } | null;
 
@@ -43,7 +44,7 @@ export async function createSubscription(
     return { error: "Produit introuvable." };
   }
 
-  await prisma.subscription.create({
+  const subscription = await prisma.subscription.create({
     data: {
       encours: parsed.data.encours,
       note: parsed.data.note,
@@ -53,6 +54,22 @@ export async function createSubscription(
       subscribedAt: parsed.data.subscribedAt ? new Date(parsed.data.subscribedAt) : new Date(),
     },
   });
+
+  // Les produits Retraite/Épargne représentent un capital réellement détenu : on les
+  // reflète automatiquement dans le patrimoine pour éviter une double saisie.
+  if (subscriptionFeedsWealth(product.category)) {
+    await prisma.wealthItem.create({
+      data: {
+        tenantId: session.user.tenantId,
+        contactId: contact.id,
+        subscriptionId: subscription.id,
+        kind: "ACTIF",
+        category: "FINANCIER",
+        label: product.name,
+        amount: parsed.data.encours,
+      },
+    });
+  }
 
   await prisma.activity.create({
     data: {
@@ -78,6 +95,9 @@ export async function cancelSubscription(subscriptionId: string): Promise<void> 
   if (!existing || existing.status === "ANNULE") return;
 
   await prisma.subscription.update({ where: { id: subscriptionId }, data: { status: "ANNULE" } });
+
+  // Le client ne détient plus ce capital : retire l'actif patrimoine lié, s'il existe.
+  await prisma.wealthItem.deleteMany({ where: { subscriptionId } });
 
   await prisma.activity.create({
     data: {

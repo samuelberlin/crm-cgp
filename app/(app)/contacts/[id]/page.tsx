@@ -289,10 +289,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                       <span>
                         {wealthCategoryLabels[item.category]}
                         {item.label ? ` — ${item.label}` : ""}
+                        {item.subscriptionId && (
+                          <span className="ml-1.5 text-xs text-muted-foreground">(produit souscrit)</span>
+                        )}
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
                         {formatCurrency(item.amount)}
-                        <DeleteWealthItemButton itemId={item.id} />
+                        {!item.subscriptionId && <DeleteWealthItemButton itemId={item.id} />}
                       </span>
                     </li>
                   ))}

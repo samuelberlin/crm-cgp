@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { multiEquipementCount, totalEncours } from "./calc";
+import { multiEquipementCount, subscriptionFeedsWealth, totalEncours } from "./calc";
 
 describe("totalEncours", () => {
   it("sums only active subscriptions", () => {
@@ -24,5 +24,18 @@ describe("multiEquipementCount", () => {
 
   it("returns 0 for no subscriptions", () => {
     expect(multiEquipementCount([])).toBe(0);
+  });
+});
+
+describe("subscriptionFeedsWealth", () => {
+  it("counts Retraite and Épargne products as wealth", () => {
+    expect(subscriptionFeedsWealth("RETRAITE")).toBe(true);
+    expect(subscriptionFeedsWealth("EPARGNE")).toBe(true);
+  });
+
+  it("excludes Prévoyance, Santé, and Dommages products", () => {
+    expect(subscriptionFeedsWealth("PREVOYANCE")).toBe(false);
+    expect(subscriptionFeedsWealth("SANTE")).toBe(false);
+    expect(subscriptionFeedsWealth("DOMMAGES")).toBe(false);
   });
 });

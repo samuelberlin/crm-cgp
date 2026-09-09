@@ -40,6 +40,11 @@ test.describe("produits et souscriptions", () => {
     await expect(page.getByText("2 produits", { exact: true })).toBeVisible();
     await expect(page.getByText(/35.?000.?€/).first()).toBeVisible();
 
+    // Seule la souscription Retraite alimente le patrimoine (Épargne/Retraite = capital
+    // réellement détenu) ; la souscription Santé (prime d'assurance) ne doit pas y figurer.
+    await expect(page.getByText("(produit souscrit)")).toHaveCount(1);
+    await expect(page.getByText("Patrimoine net")).toBeVisible();
+
     await page
       .locator("li", { hasText: "SwissLife Santé Particuliers & Madelin" })
       .getByRole("button", { name: "Résilier" })
@@ -48,6 +53,15 @@ test.describe("produits et souscriptions", () => {
     await expect(page.getByText("1 produit", { exact: true })).toBeVisible();
     await expect(page.locator('[data-slot="badge"]', { hasText: "Résiliée" })).toBeVisible();
     await expect(page.getByText(/30.?000.?€/).first()).toBeVisible();
+    await expect(page.getByText("(produit souscrit)")).toHaveCount(1);
+
+    // Résilier la souscription Retraite retire aussi l'actif patrimoine lié.
+    await page
+      .locator("li", { hasText: "SwissLife Retraite" })
+      .getByRole("button", { name: "Résilier" })
+      .click();
+
+    await expect(page.getByText("(produit souscrit)")).toHaveCount(0);
   });
 
   test("un ADMIN peut ajouter et désactiver un produit du catalogue", async ({ page }) => {
