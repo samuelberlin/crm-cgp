@@ -35,6 +35,12 @@ export function Sidebar({
         >
           Contacts
         </Link>
+        <Link
+          href="/opportunities"
+          className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
+        >
+          Opportunités
+        </Link>
         {role === "ADMIN" && (
           <Link
             href="/settings"

@@ -1,49 +1,5 @@
-import "dotenv/config";
 import { expect, test } from "@playwright/test";
-import { Client } from "pg";
-
-async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-  try {
-    return await fn(client);
-  } finally {
-    await client.end();
-  }
-}
-
-async function getTenantId(email: string): Promise<string> {
-  return withDb(async (client) => {
-    const { rows } = await client.query<{ tenantId: string }>(
-      'SELECT "tenantId" FROM "user" WHERE email = $1',
-      [email],
-    );
-    return rows[0].tenantId;
-  });
-}
-
-async function moveToTenantAsCgp(email: string, tenantId: string): Promise<void> {
-  await withDb((client) =>
-    client.query('UPDATE "user" SET "tenantId" = $1, role = $2 WHERE email = $3', [
-      tenantId,
-      "CGP",
-      email,
-    ]),
-  );
-}
-
-async function registerCabinet(
-  page: import("@playwright/test").Page,
-  { cabinetName, name, email }: { cabinetName: string; name: string; email: string },
-) {
-  await page.goto("/register");
-  await page.getByLabel("Nom du cabinet").fill(cabinetName);
-  await page.getByLabel("Votre nom").fill(name);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Mot de passe").fill("password123");
-  await page.getByRole("button", { name: "Créer le cabinet" }).click();
-  await expect(page).toHaveURL("/");
-}
+import { getTenantId, login, logout, moveToTenantAsCgp, registerCabinet } from "./helpers";
 
 test.describe("contacts", () => {
   test("create, view timeline, and edit a contact", async ({ page }) => {
@@ -90,19 +46,14 @@ test.describe("contacts", () => {
     await page.getByRole("button", { name: "Créer le contact" }).click();
     await expect(page).toHaveURL(/\/contacts\/.+/);
 
-    await page.getByRole("button", { name: "Se déconnecter" }).click();
-    await expect(page).toHaveURL("/login");
+    await logout(page);
 
     await registerCabinet(page, { cabinetName: "Cabinet Bob", name: "Bob CGP", email: cgpEmail });
     await moveToTenantAsCgp(cgpEmail, tenantId);
 
     // Re-login so the session reflects the updated tenant/role.
-    await page.getByRole("button", { name: "Se déconnecter" }).click();
-    await expect(page).toHaveURL("/login");
-    await page.getByLabel("Email").fill(cgpEmail);
-    await page.getByLabel("Mot de passe").fill("password123");
-    await page.getByRole("button", { name: "Se connecter" }).click();
-    await expect(page).toHaveURL("/");
+    await logout(page);
+    await login(page, cgpEmail);
 
     await page.goto("/contacts");
     await expect(page.getByText("Aucun contact pour le moment.")).toBeVisible();
@@ -117,11 +68,8 @@ test.describe("contacts", () => {
     await expect(page.getByRole("link", { name: "Client DeBob" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Client DAlice" })).toHaveCount(0);
 
-    await page.getByRole("button", { name: "Se déconnecter" }).click();
-    await page.getByLabel("Email").fill(adminEmail);
-    await page.getByLabel("Mot de passe").fill("password123");
-    await page.getByRole("button", { name: "Se connecter" }).click();
-    await expect(page).toHaveURL("/");
+    await logout(page);
+    await login(page, adminEmail);
 
     await page.goto("/contacts");
     await expect(page.getByRole("link", { name: "Client DAlice" })).toBeVisible();

@@ -19,30 +19,32 @@ enum Role {
 }
 
 model Tenant {
-  id         String     @id @default(cuid())
-  name       String
-  createdAt  DateTime   @default(now())
-  users      User[]
-  contacts   Contact[]
-  activities Activity[]
+  id            String        @id @default(cuid())
+  name          String
+  createdAt     DateTime      @default(now())
+  users         User[]
+  contacts      Contact[]
+  opportunities Opportunity[]
+  activities    Activity[]
 
   @@map("tenant")
 }
 
 model User {
-  id            String     @id
+  id            String        @id
   name          String
   email         String
-  emailVerified Boolean    @default(false)
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  role          Role       @default(CGP)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  role          Role          @default(CGP)
   tenantId      String?
-  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions      Session[]
   accounts      Account[]
   contacts      Contact[]
+  opportunities Opportunity[]
   activities    Activity[]
 
   @@unique([email])
@@ -84,7 +86,8 @@ model Contact {
   advisorId String?
   advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
 
-  activities Activity[]
+  activities    Activity[]
+  opportunities Opportunity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,24 +97,79 @@ model Contact {
   @@map("contact")
 }
 
-enum ActivityType {
-  CONTACT_CREATED
+enum OpportunityCategory {
+  INVESTISSEMENT
+  RETRAITE
+  IMMOBILIER
+  ASSURANCE
+  FISCALITE
+  TRANSMISSION
+  AUTRE
 }
 
-model Activity {
-  id        String       @id @default(cuid())
+enum OpportunityStage {
+  NOUVEAU
+  QUALIFIE
+  RENDEZ_VOUS
+  PROPOSITION
+  NEGOCIATION
+  GAGNE
+  PERDU
+}
+
+model Opportunity {
+  id        String @id @default(cuid())
   tenantId  String
-  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   contactId String
-  contact   Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  type      ActivityType
-  label     String
-  userId    String?
-  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt DateTime     @default(now())
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  title              String
+  category           OpportunityCategory @default(AUTRE)
+  amount             Float?
+  probability        Int                 @default(50)
+  stage              OpportunityStage    @default(NOUVEAU)
+  estimatedCloseDate DateTime?
+  note               String?
+  nextAction         String?
+
+  advisorId String?
+  advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
+
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([contactId])
+  @@index([advisorId])
+  @@map("opportunity")
+}
+
+enum ActivityType {
+  CONTACT_CREATED
+  OPPORTUNITY_CREATED
+  OPPORTUNITY_STAGE_CHANGED
+}
+
+model Activity {
+  id            String       @id @default(cuid())
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactId     String
+  contact       Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  type          ActivityType
+  label         String
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([opportunityId])
   @@map("activity")
 }
 

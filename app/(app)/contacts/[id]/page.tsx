@@ -8,10 +8,8 @@ import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
 import { contactStatusLabels } from "@/features/contacts/schemas";
-
-const activityLabels: Record<string, string> = {
-  CONTACT_CREATED: "Contact créé",
-};
+import { pipelineTotals, weightedValue } from "@/features/opportunities/calc";
+import { opportunityStageLabels } from "@/features/opportunities/schemas";
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -22,10 +20,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
     include: {
       advisor: true,
       activities: { orderBy: { createdAt: "desc" }, include: { user: true } },
+      opportunities: { orderBy: { createdAt: "desc" } },
     },
   });
 
   if (!contact) notFound();
+
+  const commercialTotals = pipelineTotals(contact.opportunities);
 
   return (
     <div className="max-w-3xl">
@@ -52,6 +53,12 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               Email
             </a>
           )}
+          <Link
+            href={`/opportunities/new?contactId=${contact.id}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Créer opportunité
+          </Link>
           <Link href={`/contacts/${contact.id}/edit`} className={buttonVariants({ size: "sm" })}>
             Modifier
           </Link>
@@ -81,9 +88,24 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           <CardContent className="space-y-2 text-sm">
             <Row label="Potentiel estimé" value={formatCurrency(contact.potential)} />
             <Row label="Source" value={contact.source ?? "—"} />
-            <p className="pt-1 text-xs text-muted-foreground">
-              Le suivi des opportunités arrive à l&apos;étape 4.
-            </p>
+            <Row label="Opportunités ouvertes" value={String(commercialTotals.count)} />
+            <Row label="Valeur du pipeline" value={formatCurrency(commercialTotals.total)} />
+            <Row label="Valeur pondérée" value={formatCurrency(commercialTotals.weighted)} />
+            {contact.opportunities.length > 0 && (
+              <ul className="space-y-1.5 border-t pt-2">
+                {contact.opportunities.map((opportunity) => (
+                  <li key={opportunity.id} className="flex items-center justify-between gap-2">
+                    <Link href={`/opportunities/${opportunity.id}/edit`} className="hover:underline">
+                      {opportunity.title}
+                    </Link>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {opportunityStageLabels[opportunity.stage]} ·{" "}
+                      {formatCurrency(weightedValue(opportunity.amount, opportunity.probability))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 
@@ -120,7 +142,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 {contact.activities.map((activity) => (
                   <li key={activity.id} className="flex items-start justify-between text-sm">
                     <div>
-                      <p className="font-medium">{activityLabels[activity.type] ?? activity.label}</p>
+                      <p className="font-medium">{activity.label}</p>
                       {activity.user && (
                         <p className="text-xs text-muted-foreground">par {activity.user.name}</p>
                       )}

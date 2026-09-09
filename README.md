@@ -2,6 +2,17 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 4 — Opportunités (terminée)
+
+- Modèle `Opportunity` : catégorie (investissement, retraite, immobilier, assurance, fiscalité, transmission, autre), montant, probabilité, étape (7 étapes : nouveau → qualifié → rendez-vous → proposition → négociation → gagné/perdu), date estimée, note, prochaine action
+- **Valeur pondérée = montant × probabilité**, calculée à la volée (`features/opportunities/calc.ts`), jamais stockée pour éviter toute désynchronisation
+- Pipeline en vue **Kanban** (`/opportunities`) : une colonne par étape, changement d'étape en un clic (menu déroulant sur la carte), totaux du pipeline (brut et pondéré) en en-tête
+- Création depuis la fiche contact (bouton « Créer opportunité », contact préverrouillé) ou en libre depuis `/opportunities/new`
+- Édition complète (`/opportunities/[id]/edit`), réassignation du conseiller réservée à ADMIN/MANAGER
+- Fiche contact enrichie : section Commercial avec la liste réelle des opportunités et leurs totaux
+- Timeline enrichie : création d'opportunité et changement d'étape apparaissent dans l'historique du contact
+- **Même isolation par rôle** que les contacts, via une règle générique partagée (`features/auth/permissions.ts#advisorScopedWhere`) : CGP ne voit que ses opportunités, ADMIN/MANAGER voient tout le cabinet
+
 ## Étape 3 — Contacts (terminée)
 
 - Modèle `Contact` (prospect / client / ancien client / partenaire) et `Activity` (timeline)
@@ -88,17 +99,18 @@ app/                        # routes Next.js (App Router)
   api/auth/[...all]/        # handler better-auth
 components/ui/               # composants shadcn/ui
 components/Sidebar.tsx       # navigation de l'app
-features/auth/               # schémas Zod, actions, session, permissions, formulaires
-features/contacts/           # schémas Zod, isolation par rôle (access.ts), actions, formulaires
+features/auth/               # schémas Zod, actions, session, permissions (dont advisorScopedWhere partagé)
+features/contacts/           # schémas Zod, isolation par rôle, actions, formulaires
+features/opportunities/      # schémas Zod, isolation par rôle, calcul pipeline, actions, formulaires
 lib/                          # prisma client, auth (serveur/client), format...
-prisma/                       # schema.prisma (Tenant, User, Contact, Activity + modèles better-auth)
+prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
 proxy.ts                      # protection des routes (ex-middleware.ts, Next 16)
-tests/e2e/                    # tests Playwright
+tests/e2e/                    # tests Playwright (helpers.ts : utilitaires partagés entre les specs)
 docker-compose.yml            # PostgreSQL local
 ```
 
-Le code métier des prochaines étapes (opportunités, tâches, agenda) sera organisé de la même façon sous `/features`.
+Le code métier des prochaines étapes (tâches, agenda) sera organisé de la même façon sous `/features`.
 
 ## Sécurité
 
@@ -114,4 +126,4 @@ Le code métier des prochaines étapes (opportunités, tâches, agenda) sera org
 
 ## Prochaine étape
 
-Étape 4 : opportunités (pipeline Kanban, calcul de la valeur pondérée).
+Étape 5 : tâches, agenda, notes.
