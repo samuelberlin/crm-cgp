@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { hasRole, requireUser } from "@/features/auth/session";
+import { AutomationSettingsForm } from "@/features/automations/AutomationSettingsForm";
 
 const roleLabels: Record<string, string> = {
   ADMIN: "Administrateur",
@@ -55,6 +56,25 @@ export default async function SettingsPage() {
               </li>
             ))}
           </ul>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Automatisations</CardTitle>
+          <CardDescription>
+            Délais avant qu&apos;une tâche automatique ou une alerte ne soit créée.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AutomationSettingsForm
+            values={{
+              firstContactDelayDays: tenant?.firstContactDelayDays ?? 1,
+              meetingReportDelayDays: tenant?.meetingReportDelayDays ?? 1,
+              proposalFollowUpDelayDays: tenant?.proposalFollowUpDelayDays ?? 3,
+              inactivityAlertDays: tenant?.inactivityAlertDays ?? 30,
+            }}
+          />
         </CardContent>
       </Card>
     </div>

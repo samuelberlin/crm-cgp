@@ -2,6 +2,18 @@
 
 CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développé étape par étape avec Claude Code.
 
+## Étape 8 — Automatisations (terminée)
+
+Pas de cron/scheduler disponible dans cet environnement : les automatisations sont **événementielles** (déclenchées par une action utilisateur) ou **calculées à la lecture**, jamais par une tâche planifiée en arrière-plan.
+
+- Délais configurables par cabinet (`Tenant.firstContactDelayDays`, `meetingReportDelayDays`, `proposalFollowUpDelayDays`, `inactivityAlertDays`), réglables depuis **Paramètres** (ADMIN uniquement)
+- Trois tâches automatiques, créées via un helper partagé (`features/automations/scheduleTask.ts#scheduleAutomationTask`, tâche + entrée de timeline en une fois) :
+  - Nouveau prospect → tâche « Premier contact »
+  - Rendez-vous marqué Réalisé → tâche « Envoyer le compte rendu »
+  - Opportunité passée à l'étape Proposition → tâche « Relancer : *titre* »
+- **Badge « Inactif »** sur la liste des contacts et une carte dédiée au dashboard : calculé à la volée (`features/automations/inactivity.ts`, pur et testé) à partir de la dernière activité connue, sans stockage ni tâche planifiée
+- Même discipline de test que les étapes précédentes : logique pure testée en unitaire, flux complet testé en E2E (`tests/e2e/automations.spec.ts`)
+
 ## Étape 7 — Patrimoine simplifié et documents (terminée)
 
 - Modèle `WealthItem` : actif (immobilier, financier, liquidités, professionnel, autre) ou passif (crédit, autre dette), avec calcul **brut / passif / net** à la volée (`features/wealth/calc.ts`, pur et testé), jamais stocké
@@ -141,6 +153,7 @@ features/notes/                # schéma Zod, action de création, formulaire ra
 features/dashboard/             # sélection de la prochaine meilleure action (pur, testé)
 features/wealth/                # calcul brut/net (pur, testé), actions, formulaires
 features/documents/             # upload/validation, actions, formulaires
+features/automations/           # délais configurables, helper de création de tâche, calcul d'inactivité (pur, testé)
 lib/                          # prisma client, auth (serveur/client), format, zod-helpers...
 prisma/                       # schema.prisma (Tenant, User, Contact, Opportunity, Task, Meeting, Note, WealthItem, Document, Activity + modèles better-auth)
 prisma.config.ts              # configuration Prisma 7 (connexion DB)
@@ -163,4 +176,4 @@ docker-compose.yml            # PostgreSQL local
 
 ## Prochaine étape
 
-Étape 8 : automatisations (relances, tâches automatiques, alertes d'inactivité).
+Étape 9 : ajouter l'IA (résumé client, rédaction de relance, analyse des opportunités).

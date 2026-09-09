@@ -5,10 +5,28 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
+import { scheduleAutomationTask } from "@/features/automations/scheduleTask";
 import { meetingWhere } from "./access";
 import { createMeetingSchema, meetingStatusValues, updateMeetingSchema } from "./schemas";
 
 export type MeetingFormState = { error: string } | null;
+
+/** Automatisation : un rendez-vous réalisé crée une tâche "Envoyer le compte rendu". */
+async function scheduleMeetingReportTask(
+  tenantId: string,
+  meeting: { contactId: string; advisorId: string | null },
+): Promise<void> {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  await scheduleAutomationTask({
+    tenantId,
+    contactId: meeting.contactId,
+    advisorId: meeting.advisorId,
+    title: "Envoyer le compte rendu",
+    delayDays: tenant?.meetingReportDelayDays ?? 1,
+    activityType: "TASK_CREATED",
+    activityLabel: "Tâche automatique créée : Envoyer le compte rendu",
+  });
+}
 
 export async function createMeeting(
   _prevState: MeetingFormState,
@@ -104,6 +122,7 @@ export async function updateMeeting(
         userId: session.user.id,
       },
     });
+    await scheduleMeetingReportTask(session.user.tenantId, existing);
   }
 
   redirect("/agenda");
@@ -133,6 +152,7 @@ export async function updateMeetingStatus(
         userId: session.user.id,
       },
     });
+    await scheduleMeetingReportTask(session.user.tenantId, existing);
   }
 
   revalidatePath("/agenda");

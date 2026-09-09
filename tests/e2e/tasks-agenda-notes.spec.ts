@@ -23,7 +23,10 @@ test.describe("tasks, agenda, and notes", () => {
 
     await page.goto("/tasks?view=all");
     await expect(page.getByRole("link", { name: "Envoyer le DER" })).toBeVisible();
-    await page.getByLabel("Changer le statut").selectOption("TERMINEE");
+    await page
+      .locator("tr", { hasText: "Envoyer le DER" })
+      .getByLabel("Changer le statut")
+      .selectOption("TERMINEE");
 
     await page.goto(contactUrl);
     await expect(page.getByText("Tâche terminée : Envoyer le DER")).toBeVisible();

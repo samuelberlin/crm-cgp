@@ -13,13 +13,14 @@ import { opportunityStageLabels } from "@/features/opportunities/schemas";
 import { taskPriorityLabels } from "@/features/tasks/schemas";
 import { pickNextBestAction, type ContactCandidate, type TaskCandidate } from "@/features/dashboard/nextBestAction";
 import { NextActionCard } from "@/features/dashboard/NextActionCard";
+import { isInactive } from "@/features/automations/inactivity";
 
 const FUNNEL_STAGES = ["NOUVEAU", "QUALIFIE", "PROPOSITION", "GAGNE"] as const;
 
 export default async function DashboardPage() {
   const session = await requireUser();
 
-  const [contactCount, openTasks, relanceContacts, opportunities] = await Promise.all([
+  const [contactCount, openTasks, relanceContacts, opportunities, allContacts, tenant] = await Promise.all([
     prisma.contact.count({ where: contactWhere(session.user) }),
     prisma.task.findMany({
       where: { ...taskWhere(session.user), status: { not: "TERMINEE" } },
@@ -34,7 +35,18 @@ export default async function DashboardPage() {
       where: opportunityWhere(session.user),
       include: { contact: true },
     }),
+    prisma.contact.findMany({
+      where: contactWhere(session.user),
+      select: { id: true, firstName: true, lastName: true, lastContactAt: true, createdAt: true },
+    }),
+    session.user.tenantId
+      ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+      : Promise.resolve(null),
   ]);
+
+  const inactiveContacts = allContacts
+    .filter((c) => isInactive(c, tenant?.inactivityAlertDays ?? 30))
+    .slice(0, 5);
 
   const taskCandidates: TaskCandidate[] = openTasks
     .filter((t) => t.dueDate !== null)
@@ -190,6 +202,29 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {inactiveContacts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Clients inactifs</CardTitle>
+            <CardDescription>
+              Aucun contact depuis {tenant?.inactivityAlertDays ?? 30} jours ou plus.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              {inactiveContacts.map((contact) => (
+                <li key={contact.id} className="flex items-center justify-between gap-2">
+                  <Link href={`/contacts/${contact.id}`} className="hover:underline">
+                    {contact.firstName} {contact.lastName}
+                  </Link>
+                  <Badge variant="destructive">Inactif</Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { canAssignAdvisor } from "@/features/auth/permissions";
 import { contactWhere } from "@/features/contacts/access";
+import { scheduleAutomationTask } from "@/features/automations/scheduleTask";
 import { opportunityWhere } from "./access";
 import {
   createOpportunitySchema,
@@ -18,6 +19,24 @@ export type OpportunityFormState = { error: string } | null;
 
 function toDate(value: string | undefined): Date | undefined {
   return value ? new Date(value) : undefined;
+}
+
+/** Automatisation : une opportunité passée en Proposition programme une relance J+N. */
+async function scheduleProposalFollowUp(
+  tenantId: string,
+  opportunity: { id: string; contactId: string; advisorId: string | null; title: string },
+): Promise<void> {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  await scheduleAutomationTask({
+    tenantId,
+    contactId: opportunity.contactId,
+    advisorId: opportunity.advisorId,
+    opportunityId: opportunity.id,
+    title: `Relancer : ${opportunity.title}`,
+    delayDays: tenant?.proposalFollowUpDelayDays ?? 3,
+    activityType: "TASK_CREATED",
+    activityLabel: `Tâche automatique créée : Relancer ${opportunity.title}`,
+  });
 }
 
 export async function createOpportunity(
@@ -138,6 +157,14 @@ export async function updateOpportunity(
         userId: session.user.id,
       },
     });
+    if (parsed.data.stage === "PROPOSITION") {
+      await scheduleProposalFollowUp(session.user.tenantId, {
+        id: existing.id,
+        contactId: existing.contactId,
+        advisorId: nextAdvisorId ?? existing.advisorId,
+        title: existing.title,
+      });
+    }
   }
 
   redirect(`/contacts/${existing.contactId}`);
@@ -167,6 +194,10 @@ export async function updateOpportunityStage(
       userId: session.user.id,
     },
   });
+
+  if (stage === "PROPOSITION") {
+    await scheduleProposalFollowUp(session.user.tenantId, existing);
+  }
 
   revalidatePath("/opportunities");
 }

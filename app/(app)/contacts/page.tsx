@@ -7,15 +7,22 @@ import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
 import { contactStatusLabels } from "@/features/contacts/schemas";
 import { formatDate } from "@/lib/format";
+import { isInactive } from "@/features/automations/inactivity";
 
 export default async function ContactsPage() {
   const session = await requireUser();
 
-  const contacts = await prisma.contact.findMany({
-    where: contactWhere(session.user),
-    include: { advisor: true },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-  });
+  const [contacts, tenant] = await Promise.all([
+    prisma.contact.findMany({
+      where: contactWhere(session.user),
+      include: { advisor: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    session.user.tenantId
+      ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+      : Promise.resolve(null),
+  ]);
+  const inactivityThreshold = tenant?.inactivityAlertDays ?? 30;
 
   return (
     <div>
@@ -52,7 +59,12 @@ export default async function ContactsPage() {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{contactStatusLabels[contact.status]}</Badge>
+                  <div className="flex gap-1.5">
+                    <Badge variant="outline">{contactStatusLabels[contact.status]}</Badge>
+                    {isInactive(contact, inactivityThreshold) && (
+                      <Badge variant="destructive">Inactif</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{contact.company ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">

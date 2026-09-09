@@ -32,6 +32,12 @@ model Tenant {
   wealthItems   WealthItem[]
   documents     Document[]
 
+  // Délais d'automatisation (en jours), configurables depuis Paramètres.
+  firstContactDelayDays      Int @default(1)
+  meetingReportDelayDays     Int @default(1)
+  proposalFollowUpDelayDays  Int @default(3)
+  inactivityAlertDays        Int @default(30)
+
   @@map("tenant")
 }
 

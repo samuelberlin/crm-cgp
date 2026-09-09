@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
+import { scheduleAutomationTask } from "@/features/automations/scheduleTask";
 import { canAssignAdvisor, contactWhere } from "./access";
 import { createContactSchema, updateContactSchema } from "./schemas";
 
@@ -44,6 +45,20 @@ export async function createContact(
       },
     },
   });
+
+  // Automatisation : un nouveau prospect reçoit une tâche de premier contact.
+  if (contact.status === "PROSPECT") {
+    const tenant = await prisma.tenant.findUnique({ where: { id: session.user.tenantId } });
+    await scheduleAutomationTask({
+      tenantId: session.user.tenantId,
+      contactId: contact.id,
+      advisorId: contact.advisorId,
+      title: "Premier contact",
+      delayDays: tenant?.firstContactDelayDays ?? 1,
+      activityType: "TASK_CREATED",
+      activityLabel: "Tâche automatique créée : Premier contact",
+    });
+  }
 
   redirect(`/contacts/${contact.id}`);
 }
