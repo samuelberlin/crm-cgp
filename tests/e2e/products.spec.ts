@@ -8,13 +8,16 @@ test.describe("produits et souscriptions", () => {
     const email = `owner+${Date.now()}@example.fr`;
     await registerCabinet(page, { cabinetName: "Cabinet Produits", name: "Alice Admin", email });
 
-    // Le catalogue des 5 produits SwissLife est créé automatiquement.
+    // Le catalogue complet des produits SwissLife est créé automatiquement.
     await page.goto("/settings");
     await expect(page.getByText("SwissLife Retraite")).toBeVisible();
     await expect(page.getByText("SwissLife Stratégic Premium")).toBeVisible();
     await expect(page.getByText("SwissLife Prévoyance TNS")).toBeVisible();
     await expect(page.getByText("SwissLife Prévoyance Indépendants")).toBeVisible();
     await expect(page.getByText("SwissLife Santé Particuliers & Madelin")).toBeVisible();
+    await expect(page.getByText("SwissLife PER Individuel")).toBeVisible();
+    await expect(page.getByText("SwissLife Corporate Expat")).toBeVisible();
+    await expect(page.getByText("Multirisques Commerce")).toBeVisible();
 
     await createContact(page, "Marc", "Petit");
 

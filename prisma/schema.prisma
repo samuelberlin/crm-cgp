@@ -336,6 +336,7 @@ enum ProductCategory {
   SANTE
   RETRAITE
   EPARGNE
+  DOMMAGES
 }
 
 model Product {

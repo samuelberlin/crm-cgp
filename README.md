@@ -7,7 +7,7 @@ CRM simple et moderne pour Conseillers en Gestion de Patrimoine (CGP), développ
 Fonctionnalité ajoutée à la demande, après les 9 étapes du plan initial.
 
 - Modèles `Product` (catalogue par cabinet) et `Subscription` (souscription d'un client à un produit, avec encours)
-- **Catalogue produits créé automatiquement** à la création d'un cabinet (`features/products/defaultCatalog.ts`), pré-rempli avec les 5 produits SwissLife effectivement commercialisés (Prévoyance TNS, Santé Particuliers & Madelin, Prévoyance Indépendants, Retraite, Stratégic Premium) — gérable ensuite depuis **Paramètres** (ajout, activation/désactivation, réservé ADMIN)
+- **Catalogue produits créé automatiquement** à la création d'un cabinet (`features/products/defaultCatalog.ts`), pré-rempli avec les **23 produits SwissLife** effectivement commercialisés — extrait de la grille de commissions Agents Généraux fournie — répartis en 5 catégories (Prévoyance, Santé, Retraite, Épargne, **Dommages**) — gérable ensuite depuis **Paramètres** (ajout, activation/désactivation, réservé ADMIN)
 - Fiche contact : section **Produits souscrits** — ajout rapide (produit + encours + date), résiliation, et deux indicateurs calculés à la volée (`features/subscriptions/calc.ts`, pur et testé) : **multi-équipement** (nombre de produits actifs) et **encours total**
 - Chaque souscription/résiliation est tracée dans la timeline du contact, comme le reste des activités
 
