@@ -27,6 +27,8 @@ export async function generateCompletion(system: string, prompt: string): Promis
     messages: [{ role: "user", content: prompt }],
   });
 
-  const block = response.content[0];
+  // Extended thinking can put one or more "thinking" blocks before the
+  // answer, so content[0] isn't reliably the text block.
+  const block = response.content.find((b) => b.type === "text");
   return block?.type === "text" ? block.text : "";
 }
