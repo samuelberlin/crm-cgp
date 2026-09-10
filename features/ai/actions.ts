@@ -175,7 +175,8 @@ export async function generateNewsletter(): Promise<AiResult> {
   try {
     const text = await generateWithWebSearch(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateNewsletter failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
