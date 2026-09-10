@@ -56,6 +56,16 @@ export function CreateMeetingForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="objectives">Objectifs du client</Label>
+        <Textarea
+          id="objectives"
+          name="objectives"
+          rows={3}
+          placeholder="Ce que le client souhaite aborder ou obtenir…"
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" rows={3} />
       </div>

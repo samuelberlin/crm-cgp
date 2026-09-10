@@ -232,6 +232,12 @@ model Meeting {
   notes    String?
   status   MeetingStatus @default(PLANIFIE)
 
+  // Base de travail pour le résumé d'entretien IA envoyé au client : ce qu'il a
+  // exprimé vouloir (avant/pendant le RDV) et ce que le conseiller lui préconise
+  // (généralement renseigné après le RDV).
+  objectives      String?
+  recommendations String?
+
   advisorId String?
   advisor   User?   @relation(fields: [advisorId], references: [id], onDelete: SetNull)
 

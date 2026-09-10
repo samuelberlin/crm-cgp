@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildContactSummaryPrompt,
   buildFollowUpPrompt,
+  buildMeetingSummaryPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
 } from "./prompts";
@@ -62,6 +63,39 @@ describe("buildFollowUpPrompt", () => {
     expect(prompt).toContain("Envoyer la proposition");
     expect(prompt).toContain("PER Marc");
     expect(prompt).toContain("Objet");
+  });
+});
+
+describe("buildMeetingSummaryPrompt", () => {
+  it("includes the client, date, objectives, and recommendations", () => {
+    const { prompt } = buildMeetingSummaryPrompt({
+      contactFirstName: "Marc",
+      contactLastName: "Petit",
+      date: new Date("2026-01-05"),
+      objectives: "Préparer sa retraite dans de bonnes conditions.",
+      recommendations: "Ouvrir un PER avec versement initial de 10 000 €.",
+      notes: "Client très motivé.",
+    });
+
+    expect(prompt).toContain("Marc Petit");
+    expect(prompt).toContain("Préparer sa retraite");
+    expect(prompt).toContain("Ouvrir un PER");
+    expect(prompt).toContain("Ce que nous avons évoqué");
+    expect(prompt).toContain("Nos préconisations");
+  });
+
+  it("says so plainly rather than inventing when objectives or recommendations are missing", () => {
+    const { prompt } = buildMeetingSummaryPrompt({
+      contactFirstName: "Alice",
+      contactLastName: "Nouvel",
+      date: new Date("2026-01-05"),
+      objectives: null,
+      recommendations: null,
+      notes: null,
+    });
+
+    expect(prompt).toContain("Objectifs exprimés par le client : —");
+    expect(prompt).toContain("Préconisations du conseiller : —");
   });
 });
 

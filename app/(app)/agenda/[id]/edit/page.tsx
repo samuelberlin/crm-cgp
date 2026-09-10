@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { meetingWhere } from "@/features/agenda/access";
 import { EditMeetingForm } from "@/features/agenda/EditMeetingForm";
+import { generateMeetingSummary } from "@/features/ai/actions";
+import { AiActionButton } from "@/features/ai/AiActionButton";
 
 export default async function EditMeetingPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireUser();
@@ -27,6 +29,19 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
         </CardHeader>
         <CardContent>
           <EditMeetingForm meeting={meeting} />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Résumé pour le client</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AiActionButton
+            label="Générer le résumé de l'entretien"
+            pendingLabel="Génération…"
+            action={generateMeetingSummary.bind(null, meeting.id)}
+          />
         </CardContent>
       </Card>
     </div>

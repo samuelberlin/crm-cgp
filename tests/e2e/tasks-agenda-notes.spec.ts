@@ -37,6 +37,7 @@ test.describe("tasks, agenda, and notes", () => {
     const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
     await page.getByLabel("Date et heure").fill(future);
     await page.getByLabel("Lieu").fill("Cabinet");
+    await page.getByLabel("Objectifs du client").fill("Préparer sa retraite dans de bonnes conditions.");
     await page.getByRole("button", { name: "Planifier le rendez-vous" }).click();
 
     await expect(page).toHaveURL(contactUrl);
@@ -49,6 +50,19 @@ test.describe("tasks, agenda, and notes", () => {
 
     await page.goto(contactUrl);
     await expect(page.getByText("Rendez-vous réalisé")).toBeVisible();
+
+    // --- Compte-rendu : objectifs conservés, préconisations, puis résumé IA pour le client ---
+    await page.locator("li", { hasText: "Cabinet" }).getByRole("link").click();
+    await expect(page.getByLabel("Objectifs du client")).toHaveValue(
+      "Préparer sa retraite dans de bonnes conditions.",
+    );
+    await page.getByLabel("Préconisations").fill("Ouvrir un PER, verser 10 000 € avant fin d'année.");
+    await page.getByRole("button", { name: "Générer le résumé de l'entretien" }).click();
+    await expect(page.getByText("Fonctionnalité IA non configurée")).toBeVisible();
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page).toHaveURL("/agenda");
+
+    await page.goto(contactUrl);
 
     // --- Note ---
     await page.getByPlaceholder("Ajouter une note…").fill("Souhaite investir 50k€ avant décembre.");

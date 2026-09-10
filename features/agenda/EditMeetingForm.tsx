@@ -25,6 +25,8 @@ export function EditMeetingForm({
     date: Date;
     location: string | null;
     notes: string | null;
+    objectives: string | null;
+    recommendations: string | null;
     status: string;
   };
 }) {
@@ -50,6 +52,26 @@ export function EditMeetingForm({
             </option>
           ))}
         </NativeSelect>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="objectives">Objectifs du client</Label>
+        <Textarea
+          id="objectives"
+          name="objectives"
+          rows={3}
+          defaultValue={meeting.objectives ?? ""}
+          placeholder="Ce que le client souhaite aborder ou obtenir…"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="recommendations">Préconisations</Label>
+        <Textarea
+          id="recommendations"
+          name="recommendations"
+          rows={3}
+          defaultValue={meeting.recommendations ?? ""}
+          placeholder="Ce que vous préconisez suite à cet entretien…"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>

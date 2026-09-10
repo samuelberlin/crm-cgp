@@ -42,6 +42,7 @@ export async function createMeeting(
     date: formData.get("date"),
     location: formData.get("location"),
     notes: formData.get("notes"),
+    objectives: formData.get("objectives"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
@@ -99,6 +100,8 @@ export async function updateMeeting(
     date: formData.get("date"),
     location: formData.get("location"),
     notes: formData.get("notes"),
+    objectives: formData.get("objectives"),
+    recommendations: formData.get("recommendations"),
     status: formData.get("status") || undefined,
   });
   if (!parsed.success) {

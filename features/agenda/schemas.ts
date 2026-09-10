@@ -14,6 +14,8 @@ export const createMeetingSchema = z.object({
   date: z.string().trim().min(1, "La date est requise."),
   location: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   notes: z.preprocess(emptyToUndefined, z.string().trim().optional()),
+  objectives: z.preprocess(emptyToUndefined, z.string().trim().optional()),
+  recommendations: z.preprocess(emptyToUndefined, z.string().trim().optional()),
 });
 
 export type CreateMeetingInput = z.infer<typeof createMeetingSchema>;

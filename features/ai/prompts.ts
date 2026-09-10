@@ -123,6 +123,37 @@ export function buildOpportunityAnalysisPrompt(opportunity: OpportunityAnalysisI
   };
 }
 
+export type MeetingSummaryInput = {
+  contactFirstName: string;
+  contactLastName: string;
+  date: Date;
+  objectives: string | null;
+  recommendations: string | null;
+  notes: string | null;
+};
+
+export function buildMeetingSummaryPrompt(meeting: MeetingSummaryInput): { system: string; prompt: string } {
+  const lines = [
+    `Client : ${meeting.contactFirstName} ${meeting.contactLastName}`,
+    `Date de l'entretien : ${formatDate(meeting.date)}`,
+    `Objectifs exprimés par le client : ${meeting.objectives ?? "—"}`,
+    `Préconisations du conseiller : ${meeting.recommendations ?? "—"}`,
+    `Notes complémentaires : ${meeting.notes ?? "—"}`,
+  ];
+
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "Rédige un compte-rendu d'entretien destiné à être envoyé directement au client, à partir des " +
+      "informations ci-dessous uniquement. Structure-le en deux parties avec des titres courts : " +
+      "« Ce que nous avons évoqué » (reprend les objectifs exprimés) et « Nos préconisations » " +
+      "(reprend les recommandations). Ton professionnel, clair, sans jargon technique, adapté à un client. " +
+      "Si les objectifs ou les préconisations ne sont pas renseignés, dis-le sobrement plutôt que d'inventer. " +
+      "Pas de formule de politesse d'ouverture ni de signature.\n\n" +
+      lines.join("\n"),
+  };
+}
+
 export type OpportunitySuggestionsInput = {
   firstName: string;
   lastName: string;

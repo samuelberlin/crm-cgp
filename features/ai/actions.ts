@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
 import { maritalStatusLabels } from "@/features/contacts/schemas";
+import { meetingWhere } from "@/features/agenda/access";
 import { opportunityWhere } from "@/features/opportunities/access";
 import { wealthTotals } from "@/features/wealth/calc";
 import { wealthCategoryLabels } from "@/features/wealth/schemas";
@@ -11,6 +12,7 @@ import { generateCompletion, isAiConfigured } from "@/lib/ai";
 import {
   buildContactSummaryPrompt,
   buildFollowUpPrompt,
+  buildMeetingSummaryPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
 } from "./prompts";
@@ -125,6 +127,33 @@ export async function generateOpportunitySuggestions(contactId: string): Promise
     subscribedProducts: contact.subscriptions.map((s) => s.product.name),
     availableProducts: catalog.filter((p) => !subscribedProductIds.has(p.id)).map((p) => p.name),
     openOpportunityTitles: contact.opportunities.map((o) => o.title),
+  });
+
+  try {
+    const text = await generateCompletion(system, prompt);
+    return { text };
+  } catch {
+    return { error: GENERATION_ERROR };
+  }
+}
+
+export async function generateMeetingSummary(meetingId: string): Promise<AiResult> {
+  if (!isAiConfigured()) return { error: NOT_CONFIGURED_ERROR };
+
+  const session = await requireUser();
+  const meeting = await prisma.meeting.findFirst({
+    where: { id: meetingId, ...meetingWhere(session.user) },
+    include: { contact: true },
+  });
+  if (!meeting) return { error: "Rendez-vous introuvable." };
+
+  const { prompt, system } = buildMeetingSummaryPrompt({
+    contactFirstName: meeting.contact.firstName,
+    contactLastName: meeting.contact.lastName,
+    date: meeting.date,
+    objectives: meeting.objectives,
+    recommendations: meeting.recommendations,
+    notes: meeting.notes,
   });
 
   try {
