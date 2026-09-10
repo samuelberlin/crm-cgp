@@ -42,6 +42,12 @@ export function Sidebar({
           Opportunités
         </Link>
         <Link
+          href="/production"
+          className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
+        >
+          Suivi de production
+        </Link>
+        <Link
           href="/agenda"
           className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 hover:bg-muted"
         >
