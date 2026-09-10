@@ -71,7 +71,7 @@ test.describe("produits et souscriptions", () => {
     await page.goto("/settings");
     await page.locator('input[name="name"]').fill("PER Individuel Maison");
     await page.locator('select[name="category"]').selectOption("RETRAITE");
-    await page.getByRole("button", { name: "Ajouter" }).click();
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
 
     await expect(page.getByText("PER Individuel Maison")).toBeVisible();
 

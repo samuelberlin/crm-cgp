@@ -6,6 +6,7 @@ import { AutomationSettingsForm } from "@/features/automations/AutomationSetting
 import { AddProductForm } from "@/features/products/AddProductForm";
 import { ToggleProductActiveButton } from "@/features/products/ToggleProductActiveButton";
 import { productCategoryLabels } from "@/features/products/schemas";
+import { InviteTeamMemberForm } from "@/features/team/InviteTeamMemberForm";
 
 const roleLabels: Record<string, string> = {
   ADMIN: "Administrateur",
@@ -53,7 +54,7 @@ export default async function SettingsPage() {
             {tenant?.users.length ?? 0} utilisateur{(tenant?.users.length ?? 0) > 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <ul className="divide-y">
             {tenant?.users.map((user) => (
               <li key={user.id} className="flex items-center justify-between py-2 text-sm">
@@ -65,6 +66,7 @@ export default async function SettingsPage() {
               </li>
             ))}
           </ul>
+          <InviteTeamMemberForm />
         </CardContent>
       </Card>
 
