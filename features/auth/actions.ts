@@ -6,6 +6,7 @@ import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { defaultProductCatalog } from "@/features/products/defaultCatalog";
+import { defaultFiscalReminders } from "@/features/reminders/defaultReminders";
 import { registerSchema } from "./schemas";
 
 export type RegisterState = { error: string } | null;
@@ -36,6 +37,10 @@ export async function registerTenant(
 
   await prisma.product.createMany({
     data: defaultProductCatalog.map((product) => ({ ...product, tenantId: tenant.id })),
+  });
+
+  await prisma.fiscalReminder.createMany({
+    data: defaultFiscalReminders.map((reminder) => ({ ...reminder, tenantId: tenant.id })),
   });
 
   try {

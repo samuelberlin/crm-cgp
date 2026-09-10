@@ -154,6 +154,20 @@ export function buildMeetingSummaryPrompt(meeting: MeetingSummaryInput): { syste
   };
 }
 
+export function buildNewsletterPrompt(): { system: string; prompt: string } {
+  return {
+    system: SYSTEM_PERSONA,
+    prompt:
+      "Cherche sur le web l'actualité financière, fiscale et sociale récente (derniers jours) " +
+      "susceptible d'intéresser des clients TNS, professions libérales et dirigeants de petites " +
+      "entreprises d'un CGP français. Rédige ensuite une courte newsletter à partir de ce que tu as " +
+      "trouvé : un titre, puis 3 à 4 actualités, chacune avec un titre court, 2 à 3 phrases " +
+      "d'explication simple (sans jargon), et une phrase sur l'impact concret pour ce public. Cite " +
+      "uniquement des informations trouvées par la recherche web, sans inventer de chiffres ni de " +
+      "dates. Termine par une ligne indiquant la date du jour de génération.",
+  };
+}
+
 export type OpportunitySuggestionsInput = {
   firstName: string;
   lastName: string;

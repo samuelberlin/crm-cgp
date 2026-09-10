@@ -3,9 +3,22 @@ import {
   buildContactSummaryPrompt,
   buildFollowUpPrompt,
   buildMeetingSummaryPrompt,
+  buildNewsletterPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
 } from "./prompts";
+
+describe("buildNewsletterPrompt", () => {
+  it("instructs the model to search the web and target TNS/prof lib/dirigeants", () => {
+    const { prompt, system } = buildNewsletterPrompt();
+
+    expect(system).toContain("CGP");
+    expect(prompt).toContain("web");
+    expect(prompt).toContain("TNS");
+    expect(prompt).toContain("professions libérales");
+    expect(prompt).toContain("dirigeants");
+  });
+});
 
 describe("buildContactSummaryPrompt", () => {
   it("includes the client's key facts", () => {

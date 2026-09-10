@@ -31,4 +31,13 @@ test.describe("assistant IA", () => {
     await page.getByRole("button", { name: "Analyser cette opportunité" }).click();
     await expect(page.getByText(NOT_CONFIGURED_TEXT)).toBeVisible();
   });
+
+  test("shows a clear message when no API key is configured, for the newsletter", async ({ page }) => {
+    const email = `owner+${Date.now()}@example.fr`;
+    await registerCabinet(page, { cabinetName: "Cabinet Newsletter", name: "Alice Admin", email });
+
+    await expect(page.getByText("Newsletter IA")).toBeVisible();
+    await page.getByRole("button", { name: "Générer la newsletter" }).click();
+    await expect(page.getByText(NOT_CONFIGURED_TEXT)).toBeVisible();
+  });
 });

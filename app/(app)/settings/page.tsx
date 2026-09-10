@@ -7,6 +7,9 @@ import { AddProductForm } from "@/features/products/AddProductForm";
 import { ToggleProductActiveButton } from "@/features/products/ToggleProductActiveButton";
 import { productCategoryLabels } from "@/features/products/schemas";
 import { InviteTeamMemberForm } from "@/features/team/InviteTeamMemberForm";
+import { AddFiscalReminderForm } from "@/features/reminders/AddFiscalReminderForm";
+import { DeleteFiscalReminderButton } from "@/features/reminders/DeleteFiscalReminderButton";
+import { monthDayLabel } from "@/features/reminders/calc";
 
 const roleLabels: Record<string, string> = {
   ADMIN: "Administrateur",
@@ -30,7 +33,7 @@ export default async function SettingsPage() {
     );
   }
 
-  const [tenant, products] = await Promise.all([
+  const [tenant, products, fiscalReminders] = await Promise.all([
     session.user.tenantId
       ? prisma.tenant.findUnique({
           where: { id: session.user.tenantId },
@@ -39,6 +42,12 @@ export default async function SettingsPage() {
       : Promise.resolve(null),
     session.user.tenantId
       ? prisma.product.findMany({ where: { tenantId: session.user.tenantId }, orderBy: { createdAt: "asc" } })
+      : Promise.resolve([]),
+    session.user.tenantId
+      ? prisma.fiscalReminder.findMany({
+          where: { tenantId: session.user.tenantId },
+          orderBy: [{ month: "asc" }, { day: "asc" }],
+        })
       : Promise.resolve([]),
   ]);
 
@@ -121,6 +130,37 @@ export default async function SettingsPage() {
             </ul>
           )}
           <AddProductForm />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Échéances importantes</CardTitle>
+          <CardDescription>
+            Rappels annuels récurrents (versement PER, déclarations, démarchage), affichés sur le
+            dashboard triés par proximité. Dates indicatives : ajustez-les selon le calendrier officiel
+            en vigueur.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {fiscalReminders.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune échéance configurée.</p>
+          ) : (
+            <ul className="divide-y">
+              {fiscalReminders.map((reminder) => (
+                <li key={reminder.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <div>
+                    <p className="font-medium">{reminder.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {monthDayLabel(reminder.month, reminder.day)}, chaque année
+                    </p>
+                  </div>
+                  <DeleteFiscalReminderButton reminderId={reminder.id} />
+                </li>
+              ))}
+            </ul>
+          )}
+          <AddFiscalReminderForm />
         </CardContent>
       </Card>
     </div>

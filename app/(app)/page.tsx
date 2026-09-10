@@ -15,44 +15,53 @@ import { pickNextBestAction, type ContactCandidate, type TaskCandidate } from "@
 import { NextActionCard } from "@/features/dashboard/NextActionCard";
 import { isInactive } from "@/features/automations/inactivity";
 import { contactStatusLabels } from "@/features/contacts/schemas";
+import { upcomingReminders } from "@/features/reminders/calc";
+import { generateNewsletter } from "@/features/ai/actions";
+import { AiActionButton } from "@/features/ai/AiActionButton";
 
 const FUNNEL_STAGES = ["NOUVEAU", "QUALIFIE", "PROPOSITION", "GAGNE"] as const;
 
 export default async function DashboardPage() {
   const session = await requireUser();
 
-  const [contactCount, openTasks, relanceContacts, opportunities, allContacts, tenant] = await Promise.all([
-    prisma.contact.count({ where: contactWhere(session.user) }),
-    prisma.task.findMany({
-      where: { ...taskWhere(session.user), status: { not: "TERMINEE" } },
-      include: { contact: true },
-      orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
-    }),
-    prisma.contact.findMany({
-      where: { ...contactWhere(session.user), nextContactAt: { not: null } },
-      orderBy: { nextContactAt: "asc" },
-    }),
-    prisma.opportunity.findMany({
-      where: opportunityWhere(session.user),
-      include: { contact: true },
-    }),
-    prisma.contact.findMany({
-      where: contactWhere(session.user),
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        status: true,
-        company: true,
-        lastContactAt: true,
-        createdAt: true,
-      },
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    }),
-    session.user.tenantId
-      ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
-      : Promise.resolve(null),
-  ]);
+  const [contactCount, openTasks, relanceContacts, opportunities, allContacts, tenant, fiscalReminders] =
+    await Promise.all([
+      prisma.contact.count({ where: contactWhere(session.user) }),
+      prisma.task.findMany({
+        where: { ...taskWhere(session.user), status: { not: "TERMINEE" } },
+        include: { contact: true },
+        orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+      }),
+      prisma.contact.findMany({
+        where: { ...contactWhere(session.user), nextContactAt: { not: null } },
+        orderBy: { nextContactAt: "asc" },
+      }),
+      prisma.opportunity.findMany({
+        where: opportunityWhere(session.user),
+        include: { contact: true },
+      }),
+      prisma.contact.findMany({
+        where: contactWhere(session.user),
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          status: true,
+          company: true,
+          lastContactAt: true,
+          createdAt: true,
+        },
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      }),
+      session.user.tenantId
+        ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+        : Promise.resolve(null),
+      session.user.tenantId
+        ? prisma.fiscalReminder.findMany({ where: { tenantId: session.user.tenantId } })
+        : Promise.resolve([]),
+    ]);
+
+  const nextReminders = upcomingReminders(fiscalReminders, new Date()).slice(0, 3);
 
   const inactiveContacts = allContacts
     .filter((c) => isInactive(c, tenant?.inactivityAlertDays ?? 30))
@@ -113,6 +122,31 @@ export default async function DashboardPage() {
       </div>
 
       <NextActionCard action={nextAction} />
+
+      {nextReminders.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Échéances importantes</CardTitle>
+            <CardDescription>PER, déclarations, démarchage — configurables dans Paramètres.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              {nextReminders.map((reminder) => (
+                <li key={reminder.id} className="flex items-center justify-between gap-2">
+                  <span>{reminder.label}</span>
+                  <Badge variant={reminder.daysUntil <= 14 ? "destructive" : "outline"} className="shrink-0">
+                    {reminder.daysUntil === 0
+                      ? "Aujourd'hui"
+                      : reminder.daysUntil === 1
+                        ? "Demain"
+                        : `Dans ${reminder.daysUntil} jours`}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
@@ -311,6 +345,23 @@ export default async function DashboardPage() {
           <Link href="/opportunities" className="mt-3 inline-block text-sm text-primary hover:underline">
             Voir le pipeline →
           </Link>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Newsletter IA</CardTitle>
+          <CardDescription>
+            Actualité financière et fiscale récente pour vos clients TNS, professions libérales et
+            dirigeants — générée à la demande, jamais envoyée automatiquement.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AiActionButton
+            label="Générer la newsletter"
+            pendingLabel="Recherche et rédaction…"
+            action={generateNewsletter}
+          />
         </CardContent>
       </Card>
 

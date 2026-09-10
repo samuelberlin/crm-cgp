@@ -8,11 +8,12 @@ import { meetingWhere } from "@/features/agenda/access";
 import { opportunityWhere } from "@/features/opportunities/access";
 import { wealthTotals } from "@/features/wealth/calc";
 import { wealthCategoryLabels } from "@/features/wealth/schemas";
-import { generateCompletion, isAiConfigured } from "@/lib/ai";
+import { generateCompletion, generateWithWebSearch, isAiConfigured } from "@/lib/ai";
 import {
   buildContactSummaryPrompt,
   buildFollowUpPrompt,
   buildMeetingSummaryPrompt,
+  buildNewsletterPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
 } from "./prompts";
@@ -158,6 +159,21 @@ export async function generateMeetingSummary(meetingId: string): Promise<AiResul
 
   try {
     const text = await generateCompletion(system, prompt);
+    return { text };
+  } catch {
+    return { error: GENERATION_ERROR };
+  }
+}
+
+export async function generateNewsletter(): Promise<AiResult> {
+  if (!isAiConfigured()) return { error: NOT_CONFIGURED_ERROR };
+
+  await requireUser();
+
+  const { prompt, system } = buildNewsletterPrompt();
+
+  try {
+    const text = await generateWithWebSearch(system, prompt);
     return { text };
   } catch {
     return { error: GENERATION_ERROR };

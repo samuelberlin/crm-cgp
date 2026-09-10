@@ -33,6 +33,7 @@ model Tenant {
   documents     Document[]
   products      Product[]
   subscriptions Subscription[]
+  fiscalReminders FiscalReminder[]
 
   // Délais d'automatisation (en jours), configurables depuis Paramètres.
   firstContactDelayDays      Int @default(1)
@@ -401,6 +402,26 @@ model Subscription {
   @@index([contactId])
   @@index([productId])
   @@map("subscription")
+}
+
+/**
+ * Rappel annuel récurrent (jour + mois, sans année) : versement PER avant fin
+ * d'année, période de déclaration de revenus, etc. Configurable par cabinet,
+ * affiché sur le dashboard trié par proximité.
+ */
+model FiscalReminder {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  label String
+  month Int // 1-12
+  day   Int // 1-31
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("fiscal_reminder")
 }
 
 enum DocumentCategory {
