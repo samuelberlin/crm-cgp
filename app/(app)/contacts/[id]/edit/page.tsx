@@ -25,7 +25,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-semibold">
+      <h1 className="mb-6 text-3xl font-semibold">
         Modifier {contact.firstName} {contact.lastName}
       </h1>
       <Card>

@@ -29,7 +29,7 @@ export default async function EditOpportunityPage({ params }: { params: Promise<
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-1 text-2xl font-semibold">Modifier l&apos;opportunité</h1>
+      <h1 className="mb-1 text-3xl font-semibold">Modifier l&apos;opportunité</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {opportunity.contact.firstName} {opportunity.contact.lastName}
       </p>

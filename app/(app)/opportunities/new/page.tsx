@@ -22,7 +22,7 @@ export default async function NewOpportunityPage({
 
     return (
       <div className="max-w-2xl">
-        <h1 className="mb-6 text-2xl font-semibold">Nouvelle opportunité</h1>
+        <h1 className="mb-6 text-3xl font-semibold">Nouvelle opportunité</h1>
         <Card>
           <CardHeader>
             <CardTitle>
@@ -45,7 +45,7 @@ export default async function NewOpportunityPage({
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-6 text-2xl font-semibold">Nouvelle opportunité</h1>
+      <h1 className="mb-6 text-3xl font-semibold">Nouvelle opportunité</h1>
       <Card>
         <CardHeader>
           <CardTitle>Informations</CardTitle>

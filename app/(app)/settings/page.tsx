@@ -43,7 +43,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-semibold">Paramètres</h1>
+      <h1 className="text-3xl font-semibold">Paramètres</h1>
       <p className="mt-1 text-sm text-muted-foreground">Cabinet et utilisateurs.</p>
 
       <Card className="mt-6">

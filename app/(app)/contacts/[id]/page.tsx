@@ -75,7 +75,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">
+            <h1 className="text-3xl font-semibold">
               {contact.firstName} {contact.lastName}
             </h1>
             <Badge variant="outline">{contactStatusLabels[contact.status]}</Badge>

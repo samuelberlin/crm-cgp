@@ -81,7 +81,7 @@ export default async function ProductionPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Suivi de production</h1>
+          <h1 className="text-3xl font-semibold">Suivi de production</h1>
           <p className="text-sm text-muted-foreground">
             Souscriptions réalisées, mois par mois, tous produits confondus.
           </p>

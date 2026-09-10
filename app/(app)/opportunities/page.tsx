@@ -31,7 +31,7 @@ export default async function OpportunitiesPage() {
     <div>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Opportunités</h1>
+          <h1 className="text-3xl font-semibold">Opportunités</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {totals.count} en cours · Pipeline {formatCurrency(totals.total)} · Pondéré{" "}
             {formatCurrency(totals.weighted)}

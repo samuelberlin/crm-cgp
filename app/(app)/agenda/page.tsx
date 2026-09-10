@@ -23,7 +23,7 @@ export default async function AgendaPage() {
   return (
     <div>
       <div className="mb-6 flex items-start justify-between">
-        <h1 className="text-2xl font-semibold">Agenda</h1>
+        <h1 className="text-3xl font-semibold">Agenda</h1>
         <Link href="/agenda/new" className={buttonVariants()}>
           Nouveau rendez-vous
         </Link>

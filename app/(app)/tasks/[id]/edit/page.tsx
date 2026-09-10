@@ -14,7 +14,7 @@ export default async function EditTaskPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-6 text-2xl font-semibold">Modifier la tâche</h1>
+      <h1 className="mb-6 text-3xl font-semibold">Modifier la tâche</h1>
       <Card>
         <CardHeader>
           <CardTitle>Informations</CardTitle>

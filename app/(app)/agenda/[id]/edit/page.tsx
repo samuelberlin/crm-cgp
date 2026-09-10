@@ -17,7 +17,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-1 text-2xl font-semibold">Modifier le rendez-vous</h1>
+      <h1 className="mb-1 text-3xl font-semibold">Modifier le rendez-vous</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {meeting.contact.firstName} {meeting.contact.lastName}
       </p>

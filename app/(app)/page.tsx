@@ -14,6 +14,7 @@ import { taskPriorityLabels } from "@/features/tasks/schemas";
 import { pickNextBestAction, type ContactCandidate, type TaskCandidate } from "@/features/dashboard/nextBestAction";
 import { NextActionCard } from "@/features/dashboard/NextActionCard";
 import { isInactive } from "@/features/automations/inactivity";
+import { contactStatusLabels } from "@/features/contacts/schemas";
 
 const FUNNEL_STAGES = ["NOUVEAU", "QUALIFIE", "PROPOSITION", "GAGNE"] as const;
 
@@ -37,7 +38,16 @@ export default async function DashboardPage() {
     }),
     prisma.contact.findMany({
       where: contactWhere(session.user),
-      select: { id: true, firstName: true, lastName: true, lastContactAt: true, createdAt: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        status: true,
+        company: true,
+        lastContactAt: true,
+        createdAt: true,
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
     session.user.tenantId
       ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
@@ -91,7 +101,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Bonjour {session.user.name.split(" ")[0]}</h1>
+        <h1 className="text-3xl font-semibold">Bonjour {session.user.name.split(" ")[0]}</h1>
         <div className="flex gap-2">
           <Link href="/contacts/new" className={buttonVariants({ variant: "outline", size: "sm" })}>
             Nouveau contact
@@ -124,6 +134,50 @@ export default async function DashboardPage() {
           </CardHeader>
         </Card>
       </div>
+
+      <Card className="p-0">
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4">
+            <div>
+              <CardTitle>Contacts</CardTitle>
+              <CardDescription>
+                {contactCount} contact{contactCount > 1 ? "s" : ""} dans votre portefeuille.
+              </CardDescription>
+            </div>
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground transition-transform group-open:rotate-180">
+              ⌄
+            </span>
+          </summary>
+          <div className="max-h-80 overflow-y-auto border-t">
+            {allContacts.length === 0 ? (
+              <p className="px-6 py-4 text-sm text-muted-foreground">Aucun contact pour l&apos;instant.</p>
+            ) : (
+              <ul className="divide-y">
+                {allContacts.map((contact) => (
+                  <li key={contact.id}>
+                    <Link
+                      href={`/contacts/${contact.id}`}
+                      className="flex items-center justify-between gap-3 px-6 py-2.5 text-sm hover:bg-muted/50"
+                    >
+                      <span className="min-w-0">
+                        <span className="font-medium">
+                          {contact.firstName} {contact.lastName}
+                        </span>
+                        {contact.company && (
+                          <span className="ml-2 truncate text-xs text-muted-foreground">{contact.company}</span>
+                        )}
+                      </span>
+                      <Badge variant="outline" className="shrink-0">
+                        {contactStatusLabels[contact.status]}
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </details>
+      </Card>
 
       <Card>
         <CardHeader>

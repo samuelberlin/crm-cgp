@@ -22,7 +22,7 @@ export default async function NewMeetingPage({
 
     return (
       <div className="max-w-lg">
-        <h1 className="mb-6 text-2xl font-semibold">Nouveau rendez-vous</h1>
+        <h1 className="mb-6 text-3xl font-semibold">Nouveau rendez-vous</h1>
         <Card>
           <CardHeader>
             <CardTitle>
@@ -45,7 +45,7 @@ export default async function NewMeetingPage({
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-6 text-2xl font-semibold">Nouveau rendez-vous</h1>
+      <h1 className="mb-6 text-3xl font-semibold">Nouveau rendez-vous</h1>
       <Card>
         <CardHeader>
           <CardTitle>Informations</CardTitle>

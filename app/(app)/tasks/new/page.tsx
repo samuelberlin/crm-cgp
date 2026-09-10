@@ -22,7 +22,7 @@ export default async function NewTaskPage({
 
     return (
       <div className="max-w-lg">
-        <h1 className="mb-6 text-2xl font-semibold">Nouvelle tâche</h1>
+        <h1 className="mb-6 text-3xl font-semibold">Nouvelle tâche</h1>
         <Card>
           <CardHeader>
             <CardTitle>
@@ -45,7 +45,7 @@ export default async function NewTaskPage({
 
   return (
     <div className="max-w-lg">
-      <h1 className="mb-6 text-2xl font-semibold">Nouvelle tâche</h1>
+      <h1 className="mb-6 text-3xl font-semibold">Nouvelle tâche</h1>
       <Card>
         <CardHeader>
           <CardTitle>Informations</CardTitle>

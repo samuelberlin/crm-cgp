@@ -30,7 +30,7 @@ export default async function TasksPage({
   return (
     <div>
       <div className="mb-6 flex items-start justify-between">
-        <h1 className="text-2xl font-semibold">Tâches</h1>
+        <h1 className="text-3xl font-semibold">Tâches</h1>
         <Link href="/tasks/new" className={buttonVariants()}>
           Nouvelle tâche
         </Link>
