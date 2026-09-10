@@ -86,16 +86,24 @@ export default async function ProductionPage({
             Souscriptions réalisées, mois par mois, tous produits confondus.
           </p>
         </div>
-        <div className="flex gap-1">
-          {availableYears.map((y) => (
-            <Link
-              key={y}
-              href={`/production?year=${y}`}
-              className={buttonVariants({ variant: y === selectedYear ? "default" : "outline", size: "sm" })}
-            >
-              {y}
-            </Link>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1">
+            {availableYears.map((y) => (
+              <Link
+                key={y}
+                href={`/production?year=${y}`}
+                className={buttonVariants({ variant: y === selectedYear ? "default" : "outline", size: "sm" })}
+              >
+                {y}
+              </Link>
+            ))}
+          </div>
+          <a
+            href={`/api/export/production?year=${selectedYear}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Exporter CSV
+          </a>
         </div>
       </div>
 

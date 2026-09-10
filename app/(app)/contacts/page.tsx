@@ -33,9 +33,14 @@ export default async function ContactsPage() {
             {contacts.length} contact{contacts.length > 1 ? "s" : ""}
           </p>
         </div>
-        <Link href="/contacts/new" className={buttonVariants()}>
-          Nouveau contact
-        </Link>
+        <div className="flex gap-2">
+          <a href="/api/export/contacts" className={buttonVariants({ variant: "outline" })}>
+            Exporter CSV
+          </a>
+          <Link href="/contacts/new" className={buttonVariants()}>
+            Nouveau contact
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card">
