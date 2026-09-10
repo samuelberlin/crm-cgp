@@ -18,7 +18,11 @@ export function AiActionButton({
 
   function onClick() {
     startTransition(async () => {
-      setResult(await action());
+      try {
+        setResult(await action());
+      } catch {
+        setResult({ error: "La génération a échoué. Réessayez dans quelques instants." });
+      }
     });
   }
 

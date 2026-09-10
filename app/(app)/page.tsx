@@ -19,6 +19,10 @@ import { upcomingReminders } from "@/features/reminders/calc";
 import { generateNewsletter } from "@/features/ai/actions";
 import { AiActionButton } from "@/features/ai/AiActionButton";
 
+// La génération de newsletter fait une recherche web en plus de l'appel IA (15-40s),
+// contre la limite par défaut de 10s des fonctions Vercel (plan Hobby).
+export const maxDuration = 60;
+
 const FUNNEL_STAGES = ["NOUVEAU", "QUALIFIE", "PROPOSITION", "GAGNE"] as const;
 
 export default async function DashboardPage() {
