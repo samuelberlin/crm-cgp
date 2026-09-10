@@ -314,12 +314,35 @@ enum WealthKind {
 
 enum WealthCategory {
   IMMOBILIER
-  FINANCIER
-  LIQUIDITES
+
+  // Patrimoine financier : enveloppes et supports détaillés plutôt qu'un bucket générique.
+  ASSURANCE_VIE
+  CONTRAT_CAPITALISATION
+  PER
+  PEA
+  PEA_PME
+  COMPTE_TITRES
+  EPARGNE_SALARIALE
+  FCPI_FIP
+  SCPI_OPCI
+  LIVRET_A
+  LDDS
+  LEP
+  PEL_CEL
+  COMPTE_BANCAIRE
+  CRYPTO
+  OR_METAUX
+  AUTRE_FINANCIER
+
   PROFESSIONNEL
   AUTRE
   CREDIT
   AUTRE_DETTE
+
+  // Dépréciées : remplacées par les rubriques financières précises ci-dessus. Conservées
+  // dans l'enum (jamais retirées) pour ne pas casser les biens déjà enregistrés en base.
+  FINANCIER
+  LIQUIDITES
 }
 
 model WealthItem {

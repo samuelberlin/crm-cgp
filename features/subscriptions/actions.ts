@@ -64,7 +64,9 @@ export async function createSubscription(
         contactId: contact.id,
         subscriptionId: subscription.id,
         kind: "ACTIF",
-        category: "FINANCIER",
+        // On ne connaît pas l'enveloppe précise du produit souscrit (PER, assurance-vie...) :
+        // rubrique générique, à affiner manuellement par le conseiller si besoin.
+        category: "AUTRE_FINANCIER",
         label: product.name,
         amount: parsed.data.encours,
       },

@@ -19,7 +19,7 @@ test.describe("wealth and documents", () => {
     await expect(page.getByText("Résidence principale")).toBeVisible();
 
     const assetForm2 = page.locator("form", { hasText: "Ajouter un actif" });
-    await assetForm2.locator('select[name="category"]').selectOption("LIQUIDITES");
+    await assetForm2.locator('select[name="category"]').selectOption("LIVRET_A");
     await assetForm2.locator('input[name="amount"]').fill("50000");
     await assetForm2.getByRole("button", { name: "Ajouter un actif" }).click();
 
