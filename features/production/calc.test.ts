@@ -6,6 +6,7 @@ import {
   monthKey,
   monthLabel,
   monthsOfYear,
+  targetProgressPercent,
   yearsWithSubscriptions,
   type ProductionSubscription,
 } from "./calc";
@@ -105,5 +106,21 @@ describe("evolutionPercent", () => {
 
   it("returns null when the previous value is zero", () => {
     expect(evolutionPercent(100, 0)).toBeNull();
+  });
+});
+
+describe("targetProgressPercent", () => {
+  it("computes the % of the annual target reached", () => {
+    expect(targetProgressPercent(50000, 200000)).toBe(25);
+    expect(targetProgressPercent(250000, 200000)).toBe(125);
+  });
+
+  it("returns null when no target is configured", () => {
+    expect(targetProgressPercent(50000, null)).toBeNull();
+  });
+
+  it("returns null when the target is zero or negative", () => {
+    expect(targetProgressPercent(50000, 0)).toBeNull();
+    expect(targetProgressPercent(50000, -1000)).toBeNull();
   });
 });

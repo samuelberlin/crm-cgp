@@ -41,6 +41,9 @@ model Tenant {
   proposalFollowUpDelayDays  Int @default(3)
   inactivityAlertDays        Int @default(30)
 
+  // Objectif de production annuel (encours), configurable depuis la page Production.
+  annualProductionTarget Float?
+
   @@map("tenant")
 }
 

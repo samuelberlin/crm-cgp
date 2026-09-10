@@ -95,3 +95,9 @@ export function evolutionPercent(current: number, previous: number): number | nu
   if (previous === 0) return null;
   return ((current - previous) / previous) * 100;
 }
+
+/** % de l'objectif annuel atteint (null si aucun objectif n'est configuré). */
+export function targetProgressPercent(totalEncours: number, target: number | null): number | null {
+  if (target === null || target <= 0) return null;
+  return (totalEncours / target) * 100;
+}

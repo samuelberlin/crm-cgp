@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { requireUser } from "@/features/auth/session";
+import { hasRole, requireUser } from "@/features/auth/session";
 import { subscriptionWhere } from "@/features/subscriptions/access";
 import {
   buildMonthlyProduction,
@@ -13,6 +13,7 @@ import {
   evolutionPercent,
   monthKey,
   monthsOfYear,
+  targetProgressPercent,
   yearsWithSubscriptions,
 } from "@/features/production/calc";
 import {
@@ -20,6 +21,7 @@ import {
   ProductionByCategoryDonut,
   ProductionEvolutionChart,
 } from "@/features/production/ProductionCharts";
+import { ProductionTargetCard } from "@/features/production/ProductionTargetCard";
 import { categoryColor, categoryLabel } from "@/features/production/presentation";
 
 export default async function ProductionPage({
@@ -30,11 +32,16 @@ export default async function ProductionPage({
   const session = await requireUser();
   const { year: rawYear } = await searchParams;
 
-  const subscriptions = await prisma.subscription.findMany({
-    where: subscriptionWhere(session.user),
-    include: { product: true, contact: true },
-    orderBy: { subscribedAt: "desc" },
-  });
+  const [subscriptions, tenant] = await Promise.all([
+    prisma.subscription.findMany({
+      where: subscriptionWhere(session.user),
+      include: { product: true, contact: true },
+      orderBy: { subscribedAt: "desc" },
+    }),
+    session.user.tenantId
+      ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
+      : Promise.resolve(null),
+  ]);
 
   const records = subscriptions.map((s) => ({
     encours: s.encours,
@@ -65,6 +72,9 @@ export default async function ProductionPage({
 
   const distinctClientsCount = new Set(yearRecords.map((r) => r.contactId)).size;
   const averageEncours = yearRecords.length > 0 ? yearTotalEncours / yearRecords.length : 0;
+
+  const annualTarget = tenant?.annualProductionTarget ?? null;
+  const targetProgress = targetProgressPercent(yearTotalEncours, annualTarget);
 
   const subscriptionsByMonth = new Map<string, typeof subscriptions>();
   for (const s of subscriptions) {
@@ -106,6 +116,24 @@ export default async function ProductionPage({
           </a>
         </div>
       </div>
+
+      {selectedYear === currentYear && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Objectif de production {selectedYear}</CardTitle>
+            <CardDescription>Encours souscrit cette année face à l&apos;objectif du cabinet.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProductionTargetCard
+              year={selectedYear}
+              totalEncours={yearTotalEncours}
+              target={annualTarget}
+              progressPercent={targetProgress}
+              isAdmin={hasRole(session, ["ADMIN"])}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

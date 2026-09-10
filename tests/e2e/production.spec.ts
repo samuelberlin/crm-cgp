@@ -26,4 +26,23 @@ test.describe("suivi de production", () => {
     await expect(page.getByRole("link", { name: "Marc Petit" })).toBeVisible();
     await expect(page.getByText("SwissLife Retraite").first()).toBeVisible();
   });
+
+  test("un ADMIN peut fixer l'objectif annuel et voir la barre de progression", async ({ page }) => {
+    const email = `owner+${Date.now()}@example.fr`;
+    await registerCabinet(page, { cabinetName: "Cabinet Objectif", name: "Alice Admin", email });
+
+    await createContact(page, "Marc", "Petit");
+    await page.locator('select[name="productId"]').selectOption({ label: "SwissLife Retraite" });
+    await page.locator('input[name="encours"]').fill("30000");
+    await page.getByRole("button", { name: "Ajouter la souscription" }).click();
+    await expect(page.getByText("1 produit", { exact: true })).toBeVisible();
+
+    await page.goto("/production");
+    await expect(page.getByText("Aucun objectif défini")).toBeVisible();
+
+    await page.getByLabel(/Objectif \d{4}/).fill("100000");
+    await page.getByRole("button", { name: "Enregistrer l'objectif" }).click();
+
+    await expect(page.getByText("30% de l'objectif atteint")).toBeVisible();
+  });
 });
