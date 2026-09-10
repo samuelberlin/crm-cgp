@@ -10,6 +10,7 @@ import {
   Calendar,
   CheckSquare,
   Settings,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 import { SignOutButton } from "@/features/auth/SignOutButton";
@@ -52,6 +53,17 @@ export function Sidebar({
           <p className="truncate text-xs text-muted-foreground">{tenantName}</p>
         </div>
       </div>
+      <form action="/search" method="GET" className="px-3 pb-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            name="q"
+            placeholder="Rechercher…"
+            className="h-8 w-full rounded-lg border border-sidebar-border bg-background/50 pl-8 pr-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+      </form>
       <nav className="flex-1 space-y-1 px-3">
         {NAV_ITEMS.filter((item) => !item.adminOnly || role === "ADMIN").map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
