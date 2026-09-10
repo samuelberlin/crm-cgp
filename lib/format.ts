@@ -14,6 +14,11 @@ export function formatDate(value: Date | string | null | undefined): string {
   );
 }
 
+export function formatTime(value: Date | string | null | undefined): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+}
+
 export function formatDateTime(value: Date | string | null | undefined): string {
   if (!value) return "—";
   return new Intl.DateTimeFormat("fr-FR", {

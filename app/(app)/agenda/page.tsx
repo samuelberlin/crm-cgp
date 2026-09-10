@@ -6,10 +6,22 @@ import { formatDateTime } from "@/lib/format";
 import { requireUser } from "@/features/auth/session";
 import { meetingWhere } from "@/features/agenda/access";
 import { StatusSelect } from "@/features/agenda/StatusSelect";
+import { WeekCalendar } from "@/features/agenda/WeekCalendar";
+import { addDays, dateKey, startOfWeek, weekRangeLabel } from "@/features/agenda/calendarLayout";
 
-export default async function AgendaPage() {
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
   const session = await requireUser();
+  const { week: rawWeek } = await searchParams;
   const now = new Date();
+
+  const requestedDate = rawWeek ? new Date(rawWeek) : now;
+  const monday = startOfWeek(Number.isNaN(requestedDate.getTime()) ? now : requestedDate);
+  const weekStart = monday;
+  const weekEnd = addDays(monday, 7);
 
   const meetings = await prisma.meeting.findMany({
     where: meetingWhere(session.user),
@@ -17,6 +29,7 @@ export default async function AgendaPage() {
     orderBy: { date: "asc" },
   });
 
+  const weekMeetings = meetings.filter((m) => m.date >= weekStart && m.date < weekEnd);
   const upcoming = meetings.filter((m) => m.date >= now);
   const past = meetings.filter((m) => m.date < now).reverse();
 
@@ -29,7 +42,30 @@ export default async function AgendaPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-medium capitalize">{weekRangeLabel(monday)}</h2>
+        <div className="flex gap-1">
+          <Link
+            href={`/agenda?week=${dateKey(addDays(monday, -7))}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            ← Précédente
+          </Link>
+          <Link href="/agenda" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Aujourd&apos;hui
+          </Link>
+          <Link
+            href={`/agenda?week=${dateKey(addDays(monday, 7))}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Suivante →
+          </Link>
+        </div>
+      </div>
+
+      <WeekCalendar monday={monday} meetings={weekMeetings} />
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>À venir</CardTitle>
