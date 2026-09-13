@@ -52,7 +52,7 @@ export default async function DashboardPage() {
           lastName: true,
           status: true,
           company: true,
-          profession: true,
+          cspCategory: true,
           lastContactAt: true,
           createdAt: true,
           subscriptions: {
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
     lastName: c.lastName,
     status: c.status,
     company: c.company,
-    profession: c.profession,
+    cspCategory: c.cspCategory,
     products: c.subscriptions.map((s) => s.product.name),
   }));
 

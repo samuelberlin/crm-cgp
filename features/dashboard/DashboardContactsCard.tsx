@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { contactStatusLabels } from "@/features/contacts/schemas";
+import { contactStatusLabels, cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
 import {
   dashboardContactTabLabels,
   dashboardContactTabs,
   distinctValues,
   matchesContactFilter,
+  presentValuesInOrder,
   type DashboardContactTab,
 } from "./contactsFilter";
 
@@ -19,7 +20,7 @@ export type DashboardContact = {
   lastName: string;
   status: keyof typeof contactStatusLabels;
   company: string | null;
-  profession: string | null;
+  cspCategory: keyof typeof cspCategoryLabels | null;
   products: string[];
 };
 
@@ -32,7 +33,8 @@ export function DashboardContactsCard({ contacts }: { contacts: DashboardContact
     setFacet(null);
   }
 
-  const professions = distinctValues(contacts.map((c) => c.profession));
+  // Ordre métier fixe (TNS/libéral/dirigeant en tête) plutôt qu'alphabétique.
+  const cspCategoriesPresent = presentValuesInOrder(contacts.map((c) => c.cspCategory), cspCategoryValues);
   const products = distinctValues(contacts.flatMap((c) => c.products));
   const filtered = contacts.filter((c) => matchesContactFilter(c, tab, facet));
 
@@ -53,17 +55,17 @@ export function DashboardContactsCard({ contacts }: { contacts: DashboardContact
 
       {tab === "csp" && (
         <div className="flex flex-wrap gap-1.5 px-6 pb-3">
-          {professions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune profession renseignée.</p>
+          {cspCategoriesPresent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune CSP renseignée.</p>
           ) : (
-            professions.map((p) => (
+            cspCategoriesPresent.map((value) => (
               <button
-                key={p}
+                key={value}
                 type="button"
-                onClick={() => setFacet(p === facet ? null : p)}
-                className={buttonVariants({ variant: p === facet ? "default" : "outline", size: "sm" })}
+                onClick={() => setFacet(value === facet ? null : value)}
+                className={buttonVariants({ variant: value === facet ? "default" : "outline", size: "sm" })}
               >
-                {p}
+                {cspCategoryLabels[value]}
               </button>
             ))
           )}

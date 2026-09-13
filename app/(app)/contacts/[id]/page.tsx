@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { contactStatusLabels, maritalStatusLabels } from "@/features/contacts/schemas";
+import { contactStatusLabels, cspCategoryLabels, maritalStatusLabels } from "@/features/contacts/schemas";
 import { pipelineTotals, weightedValue } from "@/features/opportunities/calc";
 import { opportunityStageLabels } from "@/features/opportunities/schemas";
 import { taskPriorityLabels } from "@/features/tasks/schemas";
@@ -169,7 +169,8 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2 text-sm md:grid-cols-3">
             <Row label="Société" value={contact.company ?? "—"} />
-            <Row label="Profession" value={contact.profession ?? "—"} />
+            <Row label="CSP" value={contact.cspCategory ? cspCategoryLabels[contact.cspCategory] : "—"} />
+            <Row label="Métier précis" value={contact.profession ?? "—"} />
             <Row
               label="Adresse"
               value={[contact.address, contact.postalCode, contact.city].filter(Boolean).join(" ") || "—"}

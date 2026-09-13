@@ -10,6 +10,33 @@ export const contactStatusLabels: Record<(typeof contactStatusValues)[number], s
   PARTENAIRE: "Partenaire",
 };
 
+// Classification large choisie avant le métier précis (le champ "profession", texte
+// libre) : permet de cibler "tous les TNS" ou "tous les cadres" d'un coup, sans dépendre
+// de la cohérence d'un champ texte.
+export const cspCategoryValues = [
+  "TNS",
+  "PROFESSION_LIBERALE",
+  "DIRIGEANT",
+  "CADRE",
+  "PROFESSION_INTERMEDIAIRE",
+  "EMPLOYE",
+  "OUVRIER",
+  "RETRAITE",
+  "AUTRE",
+] as const;
+
+export const cspCategoryLabels: Record<(typeof cspCategoryValues)[number], string> = {
+  TNS: "TNS (travailleur non salarié)",
+  PROFESSION_LIBERALE: "Profession libérale",
+  DIRIGEANT: "Dirigeant / Chef d'entreprise",
+  CADRE: "Cadre",
+  PROFESSION_INTERMEDIAIRE: "Profession intermédiaire",
+  EMPLOYE: "Employé",
+  OUVRIER: "Ouvrier",
+  RETRAITE: "Retraité",
+  AUTRE: "Autre",
+};
+
 export const maritalStatusValues = [
   "CELIBATAIRE",
   "MARIE",
@@ -50,6 +77,7 @@ export const updateContactSchema = createContactSchema.extend({
   lastContactAt: z.preprocess(emptyToUndefined, z.iso.date().optional()),
   nextContactAt: z.preprocess(emptyToUndefined, z.iso.date().optional()),
   birthDate: z.preprocess(emptyToUndefined, z.iso.date().optional()),
+  cspCategory: z.preprocess(emptyToUndefined, z.enum(cspCategoryValues).optional()),
   profession: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   address: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   postalCode: z.preprocess(emptyToUndefined, z.string().trim().optional()),

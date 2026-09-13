@@ -10,6 +10,8 @@ import { updateContact, type ContactFormState } from "./actions";
 import {
   contactStatusLabels,
   contactStatusValues,
+  cspCategoryLabels,
+  cspCategoryValues,
   maritalStatusLabels,
   maritalStatusValues,
 } from "./schemas";
@@ -40,6 +42,7 @@ export function EditContactForm({
     lastContactAt: Date | null;
     nextContactAt: Date | null;
     birthDate: Date | null;
+    cspCategory: string | null;
     profession: string | null;
     address: string | null;
     postalCode: string | null;
@@ -140,8 +143,24 @@ export function EditContactForm({
         <p className="mb-3 text-sm font-medium">Informations complémentaires</p>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="profession">Profession</Label>
-            <Input id="profession" name="profession" defaultValue={contact.profession ?? ""} />
+            <Label htmlFor="cspCategory">CSP</Label>
+            <NativeSelect id="cspCategory" name="cspCategory" defaultValue={contact.cspCategory ?? ""}>
+              <option value="">Non renseignée</option>
+              {cspCategoryValues.map((value) => (
+                <option key={value} value={value}>
+                  {cspCategoryLabels[value]}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="profession">Métier précis</Label>
+            <Input
+              id="profession"
+              name="profession"
+              placeholder="Ex : ingénieur conseil, médecin, artisan boulanger…"
+              defaultValue={contact.profession ?? ""}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="birthDate">Date de naissance</Label>

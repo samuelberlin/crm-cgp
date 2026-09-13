@@ -5,28 +5,31 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { contactStatusLabels } from "@/features/contacts/schemas";
+import { contactStatusLabels, cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
 import { contactViewLabels, contactViewValues, contactViewWhere, type ContactView } from "@/features/contacts/views";
 import { subscriptionWhere } from "@/features/subscriptions/access";
 import { formatDate } from "@/lib/format";
 import { isInactive } from "@/features/automations/inactivity";
+import type { CspCategory } from "@/lib/generated/prisma/enums";
 
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; profession?: string; product?: string }>;
+  searchParams: Promise<{ view?: string; csp?: string; product?: string }>;
 }) {
   const session = await requireUser();
-  const { view: rawView, profession: rawProfession, product: rawProduct } = await searchParams;
+  const { view: rawView, csp: rawCsp, product: rawProduct } = await searchParams;
   const view: ContactView = (contactViewValues as readonly string[]).includes(rawView ?? "")
     ? (rawView as ContactView)
     : "tous";
-  const profession = rawProfession ?? "";
+  const cspCategory = (cspCategoryValues as readonly string[]).includes(rawCsp ?? "")
+    ? (rawCsp as CspCategory)
+    : undefined;
   const productId = rawProduct ?? "";
 
-  const [contacts, tenant, professions, heldProducts] = await Promise.all([
+  const [contacts, tenant, presentCspCategories, heldProducts] = await Promise.all([
     prisma.contact.findMany({
-      where: { ...contactWhere(session.user), ...contactViewWhere(view, { profession, productId }) },
+      where: { ...contactWhere(session.user), ...contactViewWhere(view, { cspCategory, productId }) },
       include: { advisor: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
@@ -35,10 +38,9 @@ export default async function ContactsPage({
       : Promise.resolve(null),
     view === "csp"
       ? prisma.contact.findMany({
-          where: { ...contactWhere(session.user), profession: { not: null } },
-          select: { profession: true },
-          distinct: ["profession"],
-          orderBy: { profession: "asc" },
+          where: { ...contactWhere(session.user), cspCategory: { not: null } },
+          select: { cspCategory: true },
+          distinct: ["cspCategory"],
         })
       : Promise.resolve([]),
     view === "produit"
@@ -51,6 +53,10 @@ export default async function ContactsPage({
       : Promise.resolve([]),
   ]);
   const inactivityThreshold = tenant?.inactivityAlertDays ?? 30;
+
+  // Ordre métier fixe (TNS/libéral/dirigeant en tête) plutôt qu'alphabétique.
+  const presentCspSet = new Set(presentCspCategories.map((c) => c.cspCategory));
+  const cspCategoriesToShow = cspCategoryValues.filter((value) => presentCspSet.has(value));
 
   return (
     <div>
@@ -85,24 +91,18 @@ export default async function ContactsPage({
 
       {view === "csp" && (
         <div className="mb-4 flex flex-wrap gap-1.5">
-          {professions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune profession renseignée pour le moment.</p>
+          {cspCategoriesToShow.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune CSP renseignée pour le moment.</p>
           ) : (
-            professions.map(
-              (p) =>
-                p.profession && (
-                  <Link
-                    key={p.profession}
-                    href={`/contacts?view=csp&profession=${encodeURIComponent(p.profession)}`}
-                    className={buttonVariants({
-                      variant: p.profession === profession ? "default" : "outline",
-                      size: "sm",
-                    })}
-                  >
-                    {p.profession}
-                  </Link>
-                ),
-            )
+            cspCategoriesToShow.map((value) => (
+              <Link
+                key={value}
+                href={`/contacts?view=csp&csp=${value}`}
+                className={buttonVariants({ variant: value === cspCategory ? "default" : "outline", size: "sm" })}
+              >
+                {cspCategoryLabels[value]}
+              </Link>
+            ))
           )}
         </div>
       )}

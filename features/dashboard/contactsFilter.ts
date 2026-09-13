@@ -11,7 +11,7 @@ export const dashboardContactTabLabels: Record<DashboardContactTab, string> = {
 
 export type FilterableContact = {
   status: string;
-  profession: string | null;
+  cspCategory: string | null;
   products: string[];
 };
 
@@ -31,7 +31,7 @@ export function matchesContactFilter(
     case "prospects":
       return contact.status === "PROSPECT";
     case "csp":
-      return facet === null || contact.profession === facet;
+      return facet === null || contact.cspCategory === facet;
     case "produit":
       return facet === null || contact.products.includes(facet);
     case "tous":
@@ -40,7 +40,20 @@ export function matchesContactFilter(
   }
 }
 
-/** Valeurs distinctes (non vides), triées, pour peupler les puces de sous-filtre. */
+/** Valeurs distinctes (non vides), triées alphabétiquement, pour les puces "Produits détenus". */
 export function distinctValues(values: (string | null)[]): string[] {
   return [...new Set(values.filter((v): v is string => Boolean(v)))].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Valeurs distinctes (non vides) présentes parmi `values`, dans l'ordre de `orderedValues`
+ * plutôt qu'alphabétique — pour les puces "CSP", où l'ordre métier (TNS/libéral/dirigeant
+ * en tête) compte davantage que l'ordre alphabétique.
+ */
+export function presentValuesInOrder<T extends string>(
+  values: (T | null)[],
+  orderedValues: readonly T[],
+): T[] {
+  const present = new Set(values.filter((v): v is T => Boolean(v)));
+  return orderedValues.filter((value) => present.has(value));
 }

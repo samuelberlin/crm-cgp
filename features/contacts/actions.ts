@@ -94,6 +94,7 @@ export async function updateContact(
     lastContactAt: formData.get("lastContactAt"),
     nextContactAt: formData.get("nextContactAt"),
     birthDate: formData.get("birthDate"),
+    cspCategory: formData.get("cspCategory") || undefined,
     profession: formData.get("profession"),
     address: formData.get("address"),
     postalCode: formData.get("postalCode"),

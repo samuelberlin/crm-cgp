@@ -11,9 +11,9 @@ describe("contactViewWhere", () => {
     expect(contactViewWhere("prospects")).toEqual({ status: "PROSPECT" });
   });
 
-  it("only filters by profession once one is chosen for 'csp'", () => {
+  it("only filters by CSP category once one is chosen for 'csp'", () => {
     expect(contactViewWhere("csp")).toEqual({});
-    expect(contactViewWhere("csp", { profession: "Artisan" })).toEqual({ profession: "Artisan" });
+    expect(contactViewWhere("csp", { cspCategory: "TNS" })).toEqual({ cspCategory: "TNS" });
   });
 
   it("only filters by held product once one is chosen for 'produit'", () => {

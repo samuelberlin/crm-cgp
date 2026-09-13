@@ -80,6 +80,21 @@ enum ContactStatus {
   PARTENAIRE
 }
 
+// Catégorie socio-professionnelle : classification large choisie avant le métier précis
+// (Contact.profession, texte libre), pour pouvoir cibler "tous les TNS" ou "tous les
+// cadres" d'un coup sans dépendre de la cohérence d'un champ texte.
+enum CspCategory {
+  TNS
+  PROFESSION_LIBERALE
+  DIRIGEANT
+  CADRE
+  PROFESSION_INTERMEDIAIRE
+  EMPLOYE
+  OUVRIER
+  RETRAITE
+  AUTRE
+}
+
 model Contact {
   id        String   @id @default(cuid())
   tenantId  String
@@ -100,6 +115,7 @@ model Contact {
   nextContactAt DateTime?
 
   birthDate     DateTime?
+  cspCategory   CspCategory?
   profession    String?
   address       String?
   postalCode    String?
