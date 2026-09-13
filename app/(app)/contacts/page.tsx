@@ -6,21 +6,49 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
 import { contactStatusLabels } from "@/features/contacts/schemas";
+import { contactViewLabels, contactViewValues, contactViewWhere, type ContactView } from "@/features/contacts/views";
+import { subscriptionWhere } from "@/features/subscriptions/access";
 import { formatDate } from "@/lib/format";
 import { isInactive } from "@/features/automations/inactivity";
 
-export default async function ContactsPage() {
+export default async function ContactsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; profession?: string; product?: string }>;
+}) {
   const session = await requireUser();
+  const { view: rawView, profession: rawProfession, product: rawProduct } = await searchParams;
+  const view: ContactView = (contactViewValues as readonly string[]).includes(rawView ?? "")
+    ? (rawView as ContactView)
+    : "tous";
+  const profession = rawProfession ?? "";
+  const productId = rawProduct ?? "";
 
-  const [contacts, tenant] = await Promise.all([
+  const [contacts, tenant, professions, heldProducts] = await Promise.all([
     prisma.contact.findMany({
-      where: contactWhere(session.user),
+      where: { ...contactWhere(session.user), ...contactViewWhere(view, { profession, productId }) },
       include: { advisor: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
     session.user.tenantId
       ? prisma.tenant.findUnique({ where: { id: session.user.tenantId } })
       : Promise.resolve(null),
+    view === "csp"
+      ? prisma.contact.findMany({
+          where: { ...contactWhere(session.user), profession: { not: null } },
+          select: { profession: true },
+          distinct: ["profession"],
+          orderBy: { profession: "asc" },
+        })
+      : Promise.resolve([]),
+    view === "produit"
+      ? prisma.subscription.findMany({
+          where: { ...subscriptionWhere(session.user), status: "ACTIVE" },
+          select: { product: { select: { id: true, name: true } } },
+          distinct: ["productId"],
+          orderBy: { product: { name: "asc" } },
+        })
+      : Promise.resolve([]),
   ]);
   const inactivityThreshold = tenant?.inactivityAlertDays ?? 30;
 
@@ -43,7 +71,61 @@ export default async function ContactsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card">
+      <div className="mb-2 flex flex-wrap gap-1 border-b pb-3">
+        {contactViewValues.map((value) => (
+          <Link
+            key={value}
+            href={`/contacts?view=${value}`}
+            className={buttonVariants({ variant: value === view ? "default" : "outline", size: "sm" })}
+          >
+            {contactViewLabels[value]}
+          </Link>
+        ))}
+      </div>
+
+      {view === "csp" && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {professions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune profession renseignée pour le moment.</p>
+          ) : (
+            professions.map(
+              (p) =>
+                p.profession && (
+                  <Link
+                    key={p.profession}
+                    href={`/contacts?view=csp&profession=${encodeURIComponent(p.profession)}`}
+                    className={buttonVariants({
+                      variant: p.profession === profession ? "default" : "outline",
+                      size: "sm",
+                    })}
+                  >
+                    {p.profession}
+                  </Link>
+                ),
+            )
+          )}
+        </div>
+      )}
+
+      {view === "produit" && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {heldProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun produit souscrit pour le moment.</p>
+          ) : (
+            heldProducts.map(({ product }) => (
+              <Link
+                key={product.id}
+                href={`/contacts?view=produit&product=${product.id}`}
+                className={buttonVariants({ variant: product.id === productId ? "default" : "outline", size: "sm" })}
+              >
+                {product.name}
+              </Link>
+            ))
+          )}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
