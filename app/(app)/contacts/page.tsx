@@ -68,6 +68,9 @@ export default async function ContactsPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/contacts/import" className={buttonVariants({ variant: "outline" })}>
+            Importer CSV
+          </Link>
           <a href="/api/export/contacts" className={buttonVariants({ variant: "outline" })}>
             Exporter CSV
           </a>

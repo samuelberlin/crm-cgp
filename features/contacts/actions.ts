@@ -1,10 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { scheduleAutomationTask } from "@/features/automations/scheduleTask";
+import { parseCsv } from "@/features/export/csv";
 import { canAssignAdvisor, contactWhere } from "./access";
+import { mapCsvHeaders, parseContactImportRow, type ContactImportRow } from "./csvImport";
 import { createContactSchema, updateContactSchema } from "./schemas";
 
 export type ContactFormState = { error: string } | null;
@@ -131,4 +134,81 @@ export async function updateContact(
   });
 
   redirect(`/contacts/${contactId}`);
+}
+
+export type ImportContactsState =
+  | { error: string }
+  | { summary: { created: number; duplicates: number; errors: { line: number; reason: string }[] } }
+  | null;
+
+/**
+ * Importe des contacts depuis un CSV (charger un portefeuille existant). Réutilise les
+ * mêmes règles de validation que le formulaire d'édition ; les emails déjà présents dans
+ * le cabinet (ou en double dans le fichier) sont ignorés plutôt que dupliqués.
+ */
+export async function importContacts(
+  _prevState: ImportContactsState,
+  formData: FormData,
+): Promise<ImportContactsState> {
+  const session = await requireUser();
+  if (!session.user.tenantId) {
+    return { error: "Aucun cabinet associé à votre compte." };
+  }
+  const tenantId = session.user.tenantId;
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Sélectionnez un fichier CSV." };
+  }
+
+  const rows = parseCsv(await file.text());
+  if (rows.length === 0) {
+    return { error: "Le fichier est vide." };
+  }
+
+  const [headerRow, ...dataRows] = rows;
+  const headerMap = mapCsvHeaders(headerRow);
+  const mappedFields = new Set(headerMap.values());
+  if (!mappedFields.has("firstName") || !mappedFields.has("lastName")) {
+    return { error: "Colonnes Prénom et Nom introuvables dans le fichier (en-têtes reconnus : Prénom, Nom...)." };
+  }
+
+  const existingContacts = await prisma.contact.findMany({
+    where: { ...contactWhere(session.user), email: { not: null } },
+    select: { email: true },
+  });
+  const existingEmails = new Set(
+    existingContacts.map((c) => c.email).filter((e): e is string => Boolean(e)).map((e) => e.toLowerCase()),
+  );
+
+  const toCreate: ContactImportRow[] = [];
+  const errors: { line: number; reason: string }[] = [];
+  const seenEmails = new Set<string>();
+  let duplicates = 0;
+
+  dataRows.forEach((row, i) => {
+    const line = i + 2; // +1 pour l'en-tête, +1 pour un numéro de ligne 1-indexé.
+    const result = parseContactImportRow(headerMap, row);
+    if ("error" in result) {
+      errors.push({ line, reason: result.error });
+      return;
+    }
+
+    const email = result.data.email?.toLowerCase();
+    if (email && (existingEmails.has(email) || seenEmails.has(email))) {
+      duplicates++;
+      return;
+    }
+    if (email) seenEmails.add(email);
+    toCreate.push(result.data);
+  });
+
+  if (toCreate.length > 0) {
+    await prisma.contact.createMany({
+      data: toCreate.map((contact) => ({ ...contact, tenantId })),
+    });
+    revalidatePath("/contacts");
+  }
+
+  return { summary: { created: toCreate.length, duplicates, errors } };
 }
