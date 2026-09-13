@@ -14,10 +14,10 @@ import { taskPriorityLabels } from "@/features/tasks/schemas";
 import { pickNextBestAction, type ContactCandidate, type TaskCandidate } from "@/features/dashboard/nextBestAction";
 import { NextActionCard } from "@/features/dashboard/NextActionCard";
 import { isInactive } from "@/features/automations/inactivity";
-import { contactStatusLabels } from "@/features/contacts/schemas";
 import { upcomingReminders } from "@/features/reminders/calc";
 import { generateNewsletter } from "@/features/ai/actions";
 import { AiActionButton } from "@/features/ai/AiActionButton";
+import { DashboardContactsCard } from "@/features/dashboard/DashboardContactsCard";
 
 // La génération de newsletter fait une recherche web en plus de l'appel IA (15-40s),
 // contre la limite par défaut de 10s des fonctions Vercel (plan Hobby).
@@ -52,8 +52,13 @@ export default async function DashboardPage() {
           lastName: true,
           status: true,
           company: true,
+          profession: true,
           lastContactAt: true,
           createdAt: true,
+          subscriptions: {
+            where: { status: "ACTIVE" },
+            select: { product: { select: { name: true } } },
+          },
         },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       }),
@@ -70,6 +75,16 @@ export default async function DashboardPage() {
   const inactiveContacts = allContacts
     .filter((c) => isInactive(c, tenant?.inactivityAlertDays ?? 30))
     .slice(0, 5);
+
+  const dashboardContacts = allContacts.map((c) => ({
+    id: c.id,
+    firstName: c.firstName,
+    lastName: c.lastName,
+    status: c.status,
+    company: c.company,
+    profession: c.profession,
+    products: c.subscriptions.map((s) => s.product.name),
+  }));
 
   const taskCandidates: TaskCandidate[] = openTasks
     .filter((t) => t.dueDate !== null)
@@ -186,34 +201,13 @@ export default async function DashboardPage() {
               ⌄
             </span>
           </summary>
-          <div className="max-h-80 overflow-y-auto border-t">
-            {allContacts.length === 0 ? (
-              <p className="px-6 py-4 text-sm text-muted-foreground">Aucun contact pour l&apos;instant.</p>
-            ) : (
-              <ul className="divide-y">
-                {allContacts.map((contact) => (
-                  <li key={contact.id}>
-                    <Link
-                      href={`/contacts/${contact.id}`}
-                      className="flex items-center justify-between gap-3 px-6 py-2.5 text-sm hover:bg-muted/50"
-                    >
-                      <span className="min-w-0">
-                        <span className="font-medium">
-                          {contact.firstName} {contact.lastName}
-                        </span>
-                        {contact.company && (
-                          <span className="ml-2 truncate text-xs text-muted-foreground">{contact.company}</span>
-                        )}
-                      </span>
-                      <Badge variant="outline" className="shrink-0">
-                        {contactStatusLabels[contact.status]}
-                      </Badge>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {allContacts.length === 0 ? (
+            <p className="border-t px-6 py-4 text-sm text-muted-foreground">Aucun contact pour l&apos;instant.</p>
+          ) : (
+            <div className="border-t">
+              <DashboardContactsCard contacts={dashboardContacts} />
+            </div>
+          )}
         </details>
       </Card>
 
