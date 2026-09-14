@@ -15,13 +15,17 @@ export function ImportContactsForm() {
         <input
           type="file"
           name="file"
-          accept=".csv,text/csv"
+          accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           required
           className="text-sm file:mr-2 file:rounded-lg file:border-0 file:bg-secondary file:px-2.5 file:py-1 file:text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          Colonnes reconnues : Prénom, Nom (obligatoires), Email, Téléphone, Société, Statut, Source. Les
-          contacts dont l&apos;email correspond à un contact déjà existant sont ignorés (pas de doublon).
+          CSV ou Excel (.xlsx). Colonnes reconnues : Prénom, Nom, Email, Téléphone, Société, Adresse
+          postale, Statut, Source, Produits, Encours, Potentiel, Notes. Si Nom contient le nom complet
+          (ex. « CRABIE PHILIPPE »), le prénom est déduit automatiquement. Les lignes qui partagent le
+          même nom sont regroupées en un seul contact (utile pour un export qui liste un produit détenu
+          par ligne). Les contacts dont l&apos;email correspond à un contact déjà existant sont ignorés
+          (pas de doublon).
         </p>
       </div>
 

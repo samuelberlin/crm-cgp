@@ -7,8 +7,15 @@ import { requireUser } from "@/features/auth/session";
 import { scheduleAutomationTask } from "@/features/automations/scheduleTask";
 import { parseCsv } from "@/features/export/csv";
 import { canAssignAdvisor, contactWhere } from "./access";
-import { mapCsvHeaders, parseContactImportRow, type ContactImportRow } from "./csvImport";
+import {
+  extractRawContactFields,
+  mapCsvHeaders,
+  mergeContactsByName,
+  parseContactImportRow,
+  type ContactImportRow,
+} from "./csvImport";
 import { createContactSchema, updateContactSchema } from "./schemas";
+import { parseXlsx } from "./xlsxImport";
 
 export type ContactFormState = { error: string } | null;
 
@@ -141,9 +148,13 @@ export type ImportContactsState =
   | { summary: { created: number; duplicates: number; errors: { line: number; reason: string }[] } }
   | null;
 
+const XLSX_EXTENSION = /\.xlsx?$/i;
+
 /**
- * Importe des contacts depuis un CSV (charger un portefeuille existant). Réutilise les
- * mêmes règles de validation que le formulaire d'édition ; les emails déjà présents dans
+ * Importe des contacts depuis un CSV ou un classeur Excel (charger un portefeuille
+ * existant). Réutilise les mêmes règles de validation que le formulaire d'édition ; les
+ * lignes qui partagent un même nom sont fusionnées (un export "portefeuille" liste souvent
+ * un client sur plusieurs lignes, une par produit détenu), et les emails déjà présents dans
  * le cabinet (ou en double dans le fichier) sont ignorés plutôt que dupliqués.
  */
 export async function importContacts(
@@ -158,10 +169,17 @@ export async function importContacts(
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Sélectionnez un fichier CSV." };
+    return { error: "Sélectionnez un fichier CSV ou Excel (.xlsx)." };
   }
 
-  const rows = parseCsv(await file.text());
+  let rows: string[][];
+  try {
+    rows = XLSX_EXTENSION.test(file.name)
+      ? parseXlsx(await file.arrayBuffer())
+      : parseCsv(await file.text());
+  } catch {
+    return { error: "Le fichier n'a pas pu être lu. Vérifiez qu'il s'agit bien d'un CSV ou d'un .xlsx valide." };
+  }
   if (rows.length === 0) {
     return { error: "Le fichier est vide." };
   }
@@ -169,7 +187,7 @@ export async function importContacts(
   const [headerRow, ...dataRows] = rows;
   const headerMap = mapCsvHeaders(headerRow);
   const mappedFields = new Set(headerMap.values());
-  if (!mappedFields.has("firstName") || !mappedFields.has("lastName")) {
+  if (!mappedFields.has("firstName") && !mappedFields.has("lastName")) {
     return { error: "Colonnes Prénom et Nom introuvables dans le fichier (en-têtes reconnus : Prénom, Nom...)." };
   }
 
@@ -181,27 +199,32 @@ export async function importContacts(
     existingContacts.map((c) => c.email).filter((e): e is string => Boolean(e)).map((e) => e.toLowerCase()),
   );
 
+  const rawEntries = dataRows.map((row, i) => ({
+    fields: extractRawContactFields(headerMap, row),
+    line: i + 2, // +1 pour l'en-tête, +1 pour un numéro de ligne 1-indexé.
+  }));
+  const merged = mergeContactsByName(rawEntries);
+
   const toCreate: ContactImportRow[] = [];
   const errors: { line: number; reason: string }[] = [];
   const seenEmails = new Set<string>();
   let duplicates = 0;
 
-  dataRows.forEach((row, i) => {
-    const line = i + 2; // +1 pour l'en-tête, +1 pour un numéro de ligne 1-indexé.
-    const result = parseContactImportRow(headerMap, row);
+  for (const { fields, line } of merged) {
+    const result = parseContactImportRow(fields);
     if ("error" in result) {
       errors.push({ line, reason: result.error });
-      return;
+      continue;
     }
 
     const email = result.data.email?.toLowerCase();
     if (email && (existingEmails.has(email) || seenEmails.has(email))) {
       duplicates++;
-      return;
+      continue;
     }
     if (email) seenEmails.add(email);
     toCreate.push(result.data);
-  });
+  }
 
   if (toCreate.length > 0) {
     await prisma.contact.createMany({

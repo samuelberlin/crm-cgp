@@ -21,7 +21,7 @@ test.describe("import de contacts CSV", () => {
       "Prénom,Nom,Email,Statut",
       "Marc,Petit,marc.petit@example.fr,Client", // doublon (email déjà présent)
       "Julie,Martin,julie.martin@example.fr,Prospect", // valide
-      ",Sans Prénom,x@example.fr,Prospect", // erreur : prénom manquant
+      "Paul,Invalide,pas-un-email,Prospect", // erreur : email mal formé
     ].join("\r\n");
     writeFileSync(filePath, csv);
 
