@@ -39,6 +39,32 @@ test.describe("contacts", () => {
     await expect(page.getByRole("link", { name: "Marc Petit" })).toBeVisible();
   });
 
+  test("deletes a prospect and a client from their detail page", async ({ page }) => {
+    const email = `owner+${Date.now()}@example.fr`;
+    await registerCabinet(page, { cabinetName: "Cabinet Suppression", name: "Alice Admin", email });
+
+    await createContact(page, "Jean", "Prospect");
+    await page.getByRole("link", { name: "Modifier" }).click();
+    await page.getByLabel("Statut").selectOption("PROSPECT");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Supprimer le contact" }).click();
+    await expect(page).toHaveURL("/contacts");
+    await expect(page.getByRole("link", { name: "Jean Prospect" })).toHaveCount(0);
+
+    await createContact(page, "Sophie", "Client");
+    await page.getByRole("link", { name: "Modifier" }).click();
+    await page.getByLabel("Statut").selectOption("CLIENT");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Supprimer le contact" }).click();
+    await expect(page).toHaveURL("/contacts");
+    await expect(page.getByRole("link", { name: "Sophie Client" })).toHaveCount(0);
+    await expect(page.getByText("Aucun contact pour le moment.")).toBeVisible();
+  });
+
   test("a CGP only sees their own contacts, an ADMIN sees the whole cabinet", async ({ page }) => {
     const adminEmail = `admin+${Date.now()}@example.fr`;
     const cgpEmail = `cgp+${Date.now()}@example.fr`;

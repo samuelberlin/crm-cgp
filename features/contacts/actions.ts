@@ -143,6 +143,19 @@ export async function updateContact(
   redirect(`/contacts/${contactId}`);
 }
 
+export async function deleteContact(contactId: string): Promise<void> {
+  const session = await requireUser();
+  if (!session.user.tenantId) return;
+
+  const existing = await prisma.contact.findFirst({
+    where: { id: contactId, ...contactWhere(session.user) },
+  });
+  if (!existing) return;
+
+  await prisma.contact.delete({ where: { id: contactId } });
+  revalidatePath("/contacts");
+}
+
 export type ImportContactsState =
   | { error: string }
   | { summary: { created: number; duplicates: number; errors: { line: number; reason: string }[] } }

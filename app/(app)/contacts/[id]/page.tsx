@@ -19,6 +19,7 @@ import { assetCategoryValues, liabilityCategoryValues, wealthCategoryLabels } fr
 import { createAsset, createLiability } from "@/features/wealth/actions";
 import { AddWealthItemForm } from "@/features/wealth/AddWealthItemForm";
 import { DeleteWealthItemButton } from "@/features/wealth/DeleteWealthItemButton";
+import { DeleteContactButton } from "@/features/contacts/DeleteContactButton";
 import { documentCategoryLabels } from "@/features/documents/schemas";
 import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
 import { DeleteDocumentButton } from "@/features/documents/DeleteDocumentButton";
@@ -116,6 +117,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           <Link href={`/contacts/${contact.id}/edit`} className={buttonVariants({ size: "sm" })}>
             Modifier
           </Link>
+          <DeleteContactButton
+            contactId={contact.id}
+            contactName={`${contact.firstName} ${contact.lastName}`}
+          />
         </div>
       </div>
 

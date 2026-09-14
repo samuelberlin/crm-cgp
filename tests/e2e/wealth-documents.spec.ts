@@ -70,7 +70,7 @@ test.describe("wealth and documents", () => {
     expect(response.headers()["content-disposition"]).toContain("attachment");
     expect(await response.text()).toBe(content);
 
-    await page.getByRole("button", { name: "Supprimer" }).click();
+    await page.getByRole("button", { name: "Supprimer", exact: true }).click();
     await expect(page.getByText("carte-identite.txt")).toHaveCount(0);
   });
 });
