@@ -41,6 +41,13 @@ export async function generateCompletion(system: string, prompt: string, maxToke
       `Réponse sans texte exploitable (stop_reason=${response.stop_reason}, blocks=${response.content.map((b) => b.type).join(",")}).`,
     );
   }
+  // A response cut off mid-way by the token budget is just as unusable as an
+  // empty one for these structured multi-section answers — better to fail
+  // and let the caller retry (or raise maxTokens) than silently hand the
+  // user a half-finished analysis.
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(`Réponse tronquée par la limite de tokens (maxTokens=${maxTokens}).`);
+  }
   return block.text;
 }
 

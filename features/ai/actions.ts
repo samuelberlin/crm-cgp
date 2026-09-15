@@ -277,7 +277,7 @@ export async function generateWealthAnalysis(contactId: string): Promise<AiResul
     // Une vraie analyse structurée en 4 parties (avec justification par
     // préconisation) demande plus de place que les autres réponses IA, plus
     // courtes, de ce fichier.
-    const text = await generateCompletion(system, prompt, 2048);
+    const text = await generateCompletion(system, prompt, 4096);
     return { text };
   } catch (error) {
     console.error("generateWealthAnalysis failed:", error);
