@@ -57,7 +57,8 @@ export async function generateContactSummary(contactId: string): Promise<AiResul
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateContactSummary failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
@@ -90,7 +91,8 @@ export async function generateFollowUpDraft(contactId: string): Promise<AiResult
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateFollowUpDraft failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
@@ -136,7 +138,8 @@ export async function generateOpportunitySuggestions(contactId: string): Promise
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateOpportunitySuggestions failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
@@ -163,7 +166,8 @@ export async function generateMeetingSummary(meetingId: string): Promise<AiResul
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateMeetingSummary failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
@@ -210,7 +214,8 @@ export async function generateOpportunityAnalysis(opportunityId: string): Promis
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateOpportunityAnalysis failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
@@ -271,7 +276,8 @@ export async function generateWealthAnalysis(contactId: string): Promise<AiResul
   try {
     const text = await generateCompletion(system, prompt);
     return { text };
-  } catch {
+  } catch (error) {
+    console.error("generateWealthAnalysis failed:", error);
     return { error: GENERATION_ERROR };
   }
 }
