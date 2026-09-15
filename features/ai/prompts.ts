@@ -297,16 +297,25 @@ export function buildWealthAnalysisPrompt(contact: WealthAnalysisInput): { syste
   return {
     system: WEALTH_EXPERT_PERSONA,
     prompt:
-      "Réalise une analyse patrimoniale de ce client pour le conseiller, en te basant strictement sur les " +
-      "informations ci-dessous (revenus, patrimoine, notes). Structure ta réponse avec exactement ces 4 " +
-      "titres :\n" +
-      "1. Situation générale : 2 à 3 phrases de synthèse.\n" +
-      "2. Besoins et objectifs identifiés : déduits des notes du conseiller ci-dessus ; si aucune note " +
-      "n'indique de besoin exploitable, dis-le clairement plutôt que d'inventer.\n" +
-      "3. Diagnostic patrimonial : points forts et points de vigilance (déséquilibre actif/passif, " +
-      "enveloppe sous-exploitée, risque de sur-fiscalisation, manque de diversification, etc.).\n" +
-      "4. Recommandations : 2 à 4 pistes concrètes et priorisées, cohérentes avec le profil, la CSP et la " +
-      "forme juridique du client.\n" +
+      "Réalise une véritable analyse patrimoniale experte de ce client pour le conseiller — pas un simple " +
+      "résumé de son dossier. Le conseiller connaît déjà les informations ci-dessous : ta valeur ajoutée est " +
+      "le diagnostic et les préconisations concrètes, pas la reformulation de ce qu'il sait déjà. Base-toi " +
+      "strictement sur les données ci-dessous (revenus, patrimoine, produits souscrits, notes) et consacre " +
+      "l'essentiel de ta réponse aux points 2 à 4. Structure ta réponse avec exactement ces 4 titres :\n" +
+      "1. Situation générale : 1 à 2 phrases maximum (statut, CSP, forme juridique) — pas plus, ce n'est " +
+      "qu'un rappel de contexte.\n" +
+      "2. Besoins et objectifs identifiés : ce que ce client cherche concrètement à obtenir, interprété (pas " +
+      "recopié mot pour mot) à partir des notes du conseiller ci-dessous. Si aucune note n'indique de besoin " +
+      "exploitable, dis-le clairement plutôt que d'inventer.\n" +
+      "3. Diagnostic patrimonial : en croisant les besoins identifiés au point 2 avec les revenus, le " +
+      "patrimoine et les produits déjà souscrits ci-dessous, quels sont les points forts, les manques et les " +
+      "risques concrets et spécifiques à CE client (déséquilibre actif/passif, enveloppe absente ou " +
+      "sous-exploitée au regard d'un besoin exprimé, exposition fiscale liée à sa CSP ou à la forme juridique " +
+      "de son entreprise, absence de couverture prévoyance, manque de diversification, etc.) ?\n" +
+      "4. Recommandations : 2 à 4 préconisations concrètes et priorisées. Pour CHAQUE préconisation, précise " +
+      "explicitement : à quel besoin du point 2 elle répond, pourquoi elle est adaptée à la situation " +
+      "patrimoniale, à la CSP et à la forme juridique précises de ce client, et une action concrète que le " +
+      "conseiller peut proposer au prochain rendez-vous.\n" +
       "Ne mentionne jamais un chiffre, un produit ou un élément qui ne figure pas dans les données " +
       "ci-dessous.\n\n" +
       lines.join("\n"),

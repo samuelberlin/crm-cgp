@@ -19,10 +19,10 @@ function getClient(): Anthropic {
   return client;
 }
 
-export async function generateCompletion(system: string, prompt: string): Promise<string> {
+export async function generateCompletion(system: string, prompt: string, maxTokens = 1024): Promise<string> {
   const response = await getClient().messages.create({
     model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
-    max_tokens: 1024,
+    max_tokens: maxTokens,
     system,
     messages: [{ role: "user", content: prompt }],
   });
