@@ -1,11 +1,24 @@
 import { formatCurrency, formatDate } from "@/lib/format";
-import { contactStatusLabels, maritalStatusLabels } from "@/features/contacts/schemas";
+import {
+  contactStatusLabels,
+  cspCategoryLabels,
+  legalFormLabels,
+  maritalStatusLabels,
+} from "@/features/contacts/schemas";
+import { incomeCategoryLabels } from "@/features/income/schemas";
 import { opportunityCategoryLabels, opportunityStageLabels } from "@/features/opportunities/schemas";
+import { wealthCategoryLabels } from "@/features/wealth/schemas";
 
 const SYSTEM_PERSONA =
   "Tu es l'assistant d'un Conseiller en Gestion de Patrimoine (CGP) français. " +
   "Tu réponds toujours en français, de façon concise et professionnelle, sans inventer d'information " +
   "qui ne figure pas dans le contexte fourni.";
+
+const WEALTH_EXPERT_PERSONA =
+  "Tu es un expert senior en gestion de patrimoine qui réalise des analyses patrimoniales pour le compte " +
+  "d'un Conseiller en Gestion de Patrimoine (CGP) français. Tu réponds toujours en français, de façon " +
+  "professionnelle et structurée, en te basant strictement sur les informations fournies sans jamais " +
+  "inventer de chiffre, de produit ou d'élément de contexte qui n'y figure pas.";
 
 export type ContactSummaryInput = {
   firstName: string;
@@ -219,6 +232,83 @@ export function buildOpportunitySuggestionsPrompt(contact: OpportunitySuggestion
       "pertinent pour ce profil précis. Ne propose jamais un produit déjà souscrit ni une opportunité déjà " +
       "ouverte. Si aucune piste sérieuse ne se dégage des informations disponibles, dis-le simplement plutôt " +
       "que d'inventer. Réponds en liste à puces courtes, sans introduction ni conclusion.\n\n" +
+      lines.join("\n"),
+  };
+}
+
+export type WealthAnalysisInput = {
+  firstName: string;
+  lastName: string;
+  status: keyof typeof contactStatusLabels;
+  cspCategory: keyof typeof cspCategoryLabels | null;
+  profession: string | null;
+  legalForm: keyof typeof legalFormLabels | null;
+  maritalStatus: keyof typeof maritalStatusLabels | null;
+  birthDate: Date | null;
+  generalNotes: string | null;
+  detailedNotes: { content: string; createdAt: Date }[];
+  incomeItems: { category: keyof typeof incomeCategoryLabels; label: string | null; amount: number }[];
+  incomeTotal: number;
+  assets: { category: keyof typeof wealthCategoryLabels; label: string | null; amount: number }[];
+  liabilities: { category: keyof typeof wealthCategoryLabels; label: string | null; amount: number }[];
+  wealthNet: number;
+  subscribedProducts: string[];
+};
+
+function formatWealthLine(item: { category: keyof typeof wealthCategoryLabels; label: string | null; amount: number }) {
+  return `- ${wealthCategoryLabels[item.category]}${item.label ? ` — ${item.label}` : ""} : ${formatCurrency(item.amount)}`;
+}
+
+export function buildWealthAnalysisPrompt(contact: WealthAnalysisInput): { system: string; prompt: string } {
+  const lines = [
+    `Client : ${contact.firstName} ${contact.lastName}`,
+    `Statut : ${contactStatusLabels[contact.status]}`,
+    `CSP : ${contact.cspCategory ? cspCategoryLabels[contact.cspCategory] : "—"}`,
+    `Métier précis : ${contact.profession ?? "—"}`,
+    `Forme juridique de l'entreprise : ${contact.legalForm ? legalFormLabels[contact.legalForm] : "—"}`,
+    `Situation familiale : ${contact.maritalStatus ? maritalStatusLabels[contact.maritalStatus] : "—"}`,
+    `Date de naissance : ${contact.birthDate ? formatDate(contact.birthDate) : "—"}`,
+    "",
+    `Revenus annuels (total : ${formatCurrency(contact.incomeTotal)}) :`,
+    ...(contact.incomeItems.length === 0
+      ? ["Aucun revenu renseigné"]
+      : contact.incomeItems.map(
+          (i) => `- ${incomeCategoryLabels[i.category]}${i.label ? ` — ${i.label}` : ""} : ${formatCurrency(i.amount)}`,
+        )),
+    "",
+    "Actifs :",
+    ...(contact.assets.length === 0 ? ["Aucun actif renseigné"] : contact.assets.map(formatWealthLine)),
+    "",
+    "Passif :",
+    ...(contact.liabilities.length === 0 ? ["Aucun passif renseigné"] : contact.liabilities.map(formatWealthLine)),
+    `Patrimoine net connu : ${formatCurrency(contact.wealthNet)}`,
+    "",
+    "Produits déjà souscrits :",
+    ...(contact.subscribedProducts.length === 0 ? ["Aucun"] : contact.subscribedProducts.map((p) => `- ${p}`)),
+    "",
+    `Notes générales : ${contact.generalNotes ?? "—"}`,
+    "",
+    "Notes du conseiller (besoins, objectifs, commentaires sur le client) :",
+    ...(contact.detailedNotes.length === 0
+      ? ["Aucune note"]
+      : contact.detailedNotes.map((n) => `- [${formatDate(n.createdAt)}] ${n.content}`)),
+  ];
+
+  return {
+    system: WEALTH_EXPERT_PERSONA,
+    prompt:
+      "Réalise une analyse patrimoniale de ce client pour le conseiller, en te basant strictement sur les " +
+      "informations ci-dessous (revenus, patrimoine, notes). Structure ta réponse avec exactement ces 4 " +
+      "titres :\n" +
+      "1. Situation générale : 2 à 3 phrases de synthèse.\n" +
+      "2. Besoins et objectifs identifiés : déduits des notes du conseiller ci-dessus ; si aucune note " +
+      "n'indique de besoin exploitable, dis-le clairement plutôt que d'inventer.\n" +
+      "3. Diagnostic patrimonial : points forts et points de vigilance (déséquilibre actif/passif, " +
+      "enveloppe sous-exploitée, risque de sur-fiscalisation, manque de diversification, etc.).\n" +
+      "4. Recommandations : 2 à 4 pistes concrètes et priorisées, cohérentes avec le profil, la CSP et la " +
+      "forme juridique du client.\n" +
+      "Ne mentionne jamais un chiffre, un produit ou un élément qui ne figure pas dans les données " +
+      "ci-dessous.\n\n" +
       lines.join("\n"),
   };
 }

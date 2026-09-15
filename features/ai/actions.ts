@@ -3,9 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { maritalStatusLabels } from "@/features/contacts/schemas";
+import { cspCategoryLabels, legalFormLabels, maritalStatusLabels } from "@/features/contacts/schemas";
 import { meetingWhere } from "@/features/agenda/access";
 import { opportunityWhere } from "@/features/opportunities/access";
+import { totalIncome } from "@/features/income/calc";
+import { incomeCategoryLabels } from "@/features/income/schemas";
 import { wealthTotals } from "@/features/wealth/calc";
 import { wealthCategoryLabels } from "@/features/wealth/schemas";
 import { generateCompletion, generateWithWebSearch, isAiConfigured } from "@/lib/ai";
@@ -16,6 +18,7 @@ import {
   buildNewsletterPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
+  buildWealthAnalysisPrompt,
 } from "./prompts";
 
 export type AiResult = { text: string } | { error: string };
@@ -202,6 +205,67 @@ export async function generateOpportunityAnalysis(opportunityId: string): Promis
     contactLastName: opportunity.contact.lastName,
     contactPotential: opportunity.contact.potential,
     wealthNet: wealthTotals(opportunity.contact.wealthItems).net,
+  });
+
+  try {
+    const text = await generateCompletion(system, prompt);
+    return { text };
+  } catch {
+    return { error: GENERATION_ERROR };
+  }
+}
+
+export async function generateWealthAnalysis(contactId: string): Promise<AiResult> {
+  if (!isAiConfigured()) return { error: NOT_CONFIGURED_ERROR };
+
+  const session = await requireUser();
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, ...contactWhere(session.user) },
+    include: {
+      wealthItems: true,
+      incomeItems: true,
+      contactNotes: { orderBy: { createdAt: "desc" } },
+      subscriptions: { where: { status: "ACTIVE" }, include: { product: true } },
+    },
+  });
+  if (!contact) return { error: "Contact introuvable." };
+
+  const { prompt, system } = buildWealthAnalysisPrompt({
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    status: contact.status,
+    cspCategory: contact.cspCategory && contact.cspCategory in cspCategoryLabels ? contact.cspCategory : null,
+    profession: contact.profession,
+    legalForm: contact.legalForm && contact.legalForm in legalFormLabels ? contact.legalForm : null,
+    maritalStatus:
+      contact.maritalStatus && contact.maritalStatus in maritalStatusLabels
+        ? (contact.maritalStatus as keyof typeof maritalStatusLabels)
+        : null,
+    birthDate: contact.birthDate,
+    generalNotes: contact.notes,
+    detailedNotes: contact.contactNotes.map((n) => ({ content: n.content, createdAt: n.createdAt })),
+    incomeItems: contact.incomeItems.map((i) => ({
+      category: i.category in incomeCategoryLabels ? i.category : "AUTRE",
+      label: i.label,
+      amount: i.amount,
+    })),
+    incomeTotal: totalIncome(contact.incomeItems),
+    assets: contact.wealthItems
+      .filter((item) => item.kind === "ACTIF")
+      .map((item) => ({
+        category: item.category in wealthCategoryLabels ? item.category : "AUTRE",
+        label: item.label,
+        amount: item.amount,
+      })),
+    liabilities: contact.wealthItems
+      .filter((item) => item.kind === "PASSIF")
+      .map((item) => ({
+        category: item.category in wealthCategoryLabels ? item.category : "AUTRE",
+        label: item.label,
+        amount: item.amount,
+      })),
+    wealthNet: wealthTotals(contact.wealthItems).net,
+    subscribedProducts: contact.subscriptions.map((s) => s.product.name),
   });
 
   try {

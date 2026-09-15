@@ -36,6 +36,7 @@ import {
   generateContactSummary,
   generateFollowUpDraft,
   generateOpportunitySuggestions,
+  generateWealthAnalysis,
 } from "@/features/ai/actions";
 import { AiActionButton } from "@/features/ai/AiActionButton";
 import { multiEquipementCount, totalEncours } from "@/features/subscriptions/calc";
@@ -482,6 +483,11 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               label="Suggérer des opportunités"
               pendingLabel="Analyse…"
               action={generateOpportunitySuggestions.bind(null, contact.id)}
+            />
+            <AiActionButton
+              label="Analyse patrimoniale"
+              pendingLabel="Analyse…"
+              action={generateWealthAnalysis.bind(null, contact.id)}
             />
           </CardContent>
         </Card>

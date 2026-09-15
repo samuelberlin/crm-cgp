@@ -6,6 +6,7 @@ import {
   buildNewsletterPrompt,
   buildOpportunityAnalysisPrompt,
   buildOpportunitySuggestionsPrompt,
+  buildWealthAnalysisPrompt,
 } from "./prompts";
 
 describe("buildNewsletterPrompt", () => {
@@ -177,5 +178,67 @@ describe("buildOpportunitySuggestionsPrompt", () => {
     expect(prompt).toContain("Aucune connue");
     expect(prompt).toContain("Produits déjà souscrits par ce client :\nAucun");
     expect(prompt).toContain("Opportunités commerciales déjà ouvertes (ne jamais les dupliquer) :\nAucune");
+  });
+});
+
+describe("buildWealthAnalysisPrompt", () => {
+  it("positions the model as a wealth management expert and includes income, wealth, and notes", () => {
+    const { system, prompt } = buildWealthAnalysisPrompt({
+      firstName: "Marc",
+      lastName: "Gérant",
+      status: "CLIENT",
+      cspCategory: "DIRIGEANT",
+      profession: "Consultant",
+      legalForm: "SASU",
+      maritalStatus: "MARIE",
+      birthDate: new Date("1980-05-12"),
+      generalNotes: "Souhaite préparer sa transmission.",
+      detailedNotes: [{ content: "Veut protéger son conjoint en cas de décès.", createdAt: new Date("2026-01-05") }],
+      incomeItems: [{ category: "REMUNERATION_ART_62", label: null, amount: 40000 }],
+      incomeTotal: 40000,
+      assets: [{ category: "IMMOBILIER", label: "SCI familiale", amount: 200000 }],
+      liabilities: [{ category: "CREDIT", label: null, amount: 50000 }],
+      wealthNet: 150000,
+      subscribedProducts: ["SwissLife PER Individuel"],
+    });
+
+    expect(system).toContain("expert");
+    expect(system).toContain("gestion de patrimoine");
+    expect(prompt).toContain("Marc Gérant");
+    expect(prompt).toContain("Dirigeant / Chef d'entreprise");
+    expect(prompt).toContain("SASU");
+    expect(prompt).toContain("Rémunération art. 62");
+    expect(prompt).toContain("SCI familiale");
+    expect(prompt).toContain("Veut protéger son conjoint en cas de décès.");
+    expect(prompt).toContain("SwissLife PER Individuel");
+    expect(prompt).toContain("Besoins et objectifs identifiés");
+    expect(prompt).toContain("Diagnostic patrimonial");
+    expect(prompt).toContain("Recommandations");
+  });
+
+  it("renders empty sections explicitly rather than inventing content", () => {
+    const { prompt } = buildWealthAnalysisPrompt({
+      firstName: "Alice",
+      lastName: "Nouvel",
+      status: "PROSPECT",
+      cspCategory: null,
+      profession: null,
+      legalForm: null,
+      maritalStatus: null,
+      birthDate: null,
+      generalNotes: null,
+      detailedNotes: [],
+      incomeItems: [],
+      incomeTotal: 0,
+      assets: [],
+      liabilities: [],
+      wealthNet: 0,
+      subscribedProducts: [],
+    });
+
+    expect(prompt).toContain("Aucun revenu renseigné");
+    expect(prompt).toContain("Aucun actif renseigné");
+    expect(prompt).toContain("Aucun passif renseigné");
+    expect(prompt).toContain("Notes du conseiller (besoins, objectifs, commentaires sur le client) :\nAucune note");
   });
 });
