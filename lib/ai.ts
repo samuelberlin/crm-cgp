@@ -28,9 +28,17 @@ export async function generateCompletion(system: string, prompt: string, maxToke
   });
 
   // Extended thinking can put one or more "thinking" blocks before the
-  // answer, so content[0] isn't reliably the text block.
+  // answer, so content[0] isn't reliably the text block. A missing or empty
+  // text block (e.g. max_tokens hit before any answer, or a non-text
+  // stop_reason) must fail loudly rather than silently return "" — an empty
+  // success is indistinguishable from a real answer for the caller.
   const block = response.content.find((b) => b.type === "text");
-  return block?.type === "text" ? block.text : "";
+  if (!block || block.type !== "text" || block.text.trim() === "") {
+    throw new Error(
+      `Réponse sans texte exploitable (stop_reason=${response.stop_reason}, blocks=${response.content.map((b) => b.type).join(",")}).`,
+    );
+  }
+  return block.text;
 }
 
 // Le plan Vercel Hobby tue la fonction après 60s sans retour clair côté client.
