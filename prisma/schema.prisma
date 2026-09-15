@@ -30,6 +30,7 @@ model Tenant {
   notes         Note[]
   activities    Activity[]
   wealthItems   WealthItem[]
+  incomeItems   IncomeItem[]
   documents     Document[]
   products      Product[]
   subscriptions Subscription[]
@@ -131,6 +132,7 @@ model Contact {
   meetings      Meeting[]
   contactNotes  Note[]
   wealthItems   WealthItem[]
+  incomeItems   IncomeItem[]
   documents     Document[]
   subscriptions Subscription[]
 
@@ -385,6 +387,37 @@ model WealthItem {
   @@index([tenantId])
   @@index([contactId])
   @@map("wealth_item")
+}
+
+enum IncomeCategory {
+  SALAIRE
+  BIC
+  BNC
+  DIVIDENDES
+  AUTRE
+}
+
+// Revenus annuels du contact (rémunération, BIC/BNC pour un indépendant, dividendes...).
+// Distinct du patrimoine (WealthItem, un stock) : ce sont des flux annuels, saisis pour
+// alimenter les audits de rémunération/statut (ex. export vers un outil comme Mako).
+model IncomeItem {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  category IncomeCategory
+  label    String?
+  amount   Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("income_item")
 }
 
 enum ProductCategory {

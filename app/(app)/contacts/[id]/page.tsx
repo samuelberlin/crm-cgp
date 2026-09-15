@@ -19,6 +19,10 @@ import { assetCategoryValues, liabilityCategoryValues, wealthCategoryLabels } fr
 import { createAsset, createLiability } from "@/features/wealth/actions";
 import { AddWealthItemForm } from "@/features/wealth/AddWealthItemForm";
 import { DeleteWealthItemButton } from "@/features/wealth/DeleteWealthItemButton";
+import { totalIncome } from "@/features/income/calc";
+import { incomeCategoryLabels } from "@/features/income/schemas";
+import { AddIncomeItemForm } from "@/features/income/AddIncomeItemForm";
+import { DeleteIncomeItemButton } from "@/features/income/DeleteIncomeItemButton";
 import { DeleteContactButton } from "@/features/contacts/DeleteContactButton";
 import { documentCategoryLabels } from "@/features/documents/schemas";
 import { UploadDocumentForm } from "@/features/documents/UploadDocumentForm";
@@ -49,6 +53,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
         meetings: { orderBy: { date: "desc" } },
         contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
         wealthItems: { orderBy: { createdAt: "desc" } },
+        incomeItems: { orderBy: { createdAt: "desc" } },
         documents: { orderBy: { createdAt: "desc" } },
         subscriptions: { orderBy: { subscribedAt: "desc" }, include: { product: true } },
       },
@@ -68,6 +73,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const patrimonyTotals = wealthTotals(contact.wealthItems);
   const assets = contact.wealthItems.filter((item) => item.kind === "ACTIF");
   const liabilities = contact.wealthItems.filter((item) => item.kind === "PASSIF");
+  const incomeTotal = totalIncome(contact.incomeItems);
   const equipementCount = multiEquipementCount(contact.subscriptions);
   const encoursTotal = totalEncours(contact.subscriptions);
 
@@ -272,6 +278,34 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 ))}
               </ul>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Revenus</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Row label="Total des revenus annuels" value={formatCurrency(incomeTotal)} />
+
+            {contact.incomeItems.length > 0 && (
+              <ul className="space-y-1.5 border-t pt-3 text-sm">
+                {contact.incomeItems.map((item) => (
+                  <li key={item.id} className="flex items-center justify-between gap-2">
+                    <span>
+                      {incomeCategoryLabels[item.category]}
+                      {item.label ? ` — ${item.label}` : ""}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-3">
+                      {formatCurrency(item.amount)}
+                      <DeleteIncomeItemButton itemId={item.id} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <AddIncomeItemForm contactId={contact.id} />
           </CardContent>
         </Card>
 
