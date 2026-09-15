@@ -24,14 +24,17 @@ export async function generateCompletion(system: string, prompt: string, maxToke
     model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
     max_tokens: maxTokens,
     system,
+    // These calls want a direct, concise business text (a bulleted summary, an
+    // email, a structured analysis) — not the model's visible reasoning. Left
+    // unset, this model thinks adaptively by default and can burn the entire
+    // max_tokens budget on a "thinking" block before ever writing the answer.
+    thinking: { type: "disabled" },
     messages: [{ role: "user", content: prompt }],
   });
 
-  // Extended thinking can put one or more "thinking" blocks before the
-  // answer, so content[0] isn't reliably the text block. A missing or empty
-  // text block (e.g. max_tokens hit before any answer, or a non-text
-  // stop_reason) must fail loudly rather than silently return "" — an empty
-  // success is indistinguishable from a real answer for the caller.
+  // A missing or empty text block (e.g. max_tokens hit before any answer, or
+  // a non-text stop_reason) must fail loudly rather than silently return ""
+  // — an empty success is indistinguishable from a real answer for the caller.
   const block = response.content.find((b) => b.type === "text");
   if (!block || block.type !== "text" || block.text.trim() === "") {
     throw new Error(
@@ -64,6 +67,7 @@ export async function generateWithWebSearch(system: string, prompt: string): Pro
         model,
         max_tokens: 2048,
         system,
+        thinking: { type: "disabled" },
         tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }],
         messages,
       },
