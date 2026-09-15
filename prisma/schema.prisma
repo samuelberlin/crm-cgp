@@ -96,6 +96,23 @@ enum CspCategory {
   AUTRE
 }
 
+// Forme juridique de l'entreprise du contact, pertinente surtout pour les dirigeants,
+// professions libérales et TNS (régime social/fiscal du dirigeant, audits type Mako...).
+enum LegalForm {
+  EI
+  MICRO_ENTREPRISE
+  EURL
+  SARL
+  SASU
+  SAS
+  SA
+  SCI
+  SELARL
+  SELAS
+  SNC
+  AUTRE
+}
+
 model Contact {
   id        String   @id @default(cuid())
   tenantId  String
@@ -118,6 +135,7 @@ model Contact {
   birthDate     DateTime?
   cspCategory   CspCategory?
   profession    String?
+  legalForm     LegalForm?
   address       String?
   postalCode    String?
   city          String?
@@ -391,6 +409,7 @@ model WealthItem {
 
 enum IncomeCategory {
   SALAIRE
+  REMUNERATION_ART_62
   BIC
   BNC
   DIVIDENDES

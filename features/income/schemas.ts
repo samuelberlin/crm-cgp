@@ -1,9 +1,17 @@
 import { z } from "zod";
 
-export const incomeCategoryValues = ["SALAIRE", "BIC", "BNC", "DIVIDENDES", "AUTRE"] as const;
+export const incomeCategoryValues = [
+  "SALAIRE",
+  "REMUNERATION_ART_62",
+  "BIC",
+  "BNC",
+  "DIVIDENDES",
+  "AUTRE",
+] as const;
 
 export const incomeCategoryLabels: Record<(typeof incomeCategoryValues)[number], string> = {
   SALAIRE: "Salaire / rémunération",
+  REMUNERATION_ART_62: "Rémunération art. 62 (gérant majoritaire)",
   BIC: "BIC (bénéfices industriels et commerciaux)",
   BNC: "BNC (bénéfices non commerciaux)",
   DIVIDENDES: "Dividendes",

@@ -7,7 +7,12 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { contactStatusLabels, cspCategoryLabels, maritalStatusLabels } from "@/features/contacts/schemas";
+import {
+  contactStatusLabels,
+  cspCategoryLabels,
+  legalFormLabels,
+  maritalStatusLabels,
+} from "@/features/contacts/schemas";
 import { pipelineTotals, weightedValue } from "@/features/opportunities/calc";
 import { opportunityStageLabels } from "@/features/opportunities/schemas";
 import { taskPriorityLabels } from "@/features/tasks/schemas";
@@ -182,6 +187,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <Row label="Société" value={contact.company ?? "—"} />
             <Row label="CSP" value={contact.cspCategory ? cspCategoryLabels[contact.cspCategory] : "—"} />
             <Row label="Métier précis" value={contact.profession ?? "—"} />
+            <Row
+              label="Forme juridique"
+              value={contact.legalForm ? legalFormLabels[contact.legalForm] : "—"}
+            />
             <Row
               label="Adresse"
               value={[contact.address, contact.postalCode, contact.city].filter(Boolean).join(" ") || "—"}

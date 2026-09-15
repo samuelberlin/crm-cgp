@@ -37,6 +37,38 @@ export const cspCategoryLabels: Record<(typeof cspCategoryValues)[number], strin
   AUTRE: "Autre",
 };
 
+// Forme juridique de l'entreprise du contact : surtout utile pour les dirigeants,
+// professions libérales et TNS (régime social/fiscal du dirigeant, audits externes...).
+export const legalFormValues = [
+  "EI",
+  "MICRO_ENTREPRISE",
+  "EURL",
+  "SARL",
+  "SASU",
+  "SAS",
+  "SA",
+  "SCI",
+  "SELARL",
+  "SELAS",
+  "SNC",
+  "AUTRE",
+] as const;
+
+export const legalFormLabels: Record<(typeof legalFormValues)[number], string> = {
+  EI: "EI (entreprise individuelle)",
+  MICRO_ENTREPRISE: "Micro-entreprise",
+  EURL: "EURL",
+  SARL: "SARL",
+  SASU: "SASU",
+  SAS: "SAS",
+  SA: "SA",
+  SCI: "SCI",
+  SELARL: "SELARL",
+  SELAS: "SELAS",
+  SNC: "SNC",
+  AUTRE: "Autre",
+};
+
 export const maritalStatusValues = [
   "CELIBATAIRE",
   "MARIE",
@@ -79,6 +111,7 @@ export const updateContactSchema = createContactSchema.extend({
   birthDate: z.preprocess(emptyToUndefined, z.iso.date().optional()),
   cspCategory: z.preprocess(emptyToUndefined, z.enum(cspCategoryValues).optional()),
   profession: z.preprocess(emptyToUndefined, z.string().trim().optional()),
+  legalForm: z.preprocess(emptyToUndefined, z.enum(legalFormValues).optional()),
   address: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   postalCode: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   city: z.preprocess(emptyToUndefined, z.string().trim().optional()),

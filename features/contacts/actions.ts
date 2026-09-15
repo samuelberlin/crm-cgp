@@ -106,6 +106,7 @@ export async function updateContact(
     birthDate: formData.get("birthDate"),
     cspCategory: formData.get("cspCategory") || undefined,
     profession: formData.get("profession"),
+    legalForm: formData.get("legalForm") || undefined,
     address: formData.get("address"),
     postalCode: formData.get("postalCode"),
     city: formData.get("city"),

@@ -12,6 +12,8 @@ import {
   contactStatusValues,
   cspCategoryLabels,
   cspCategoryValues,
+  legalFormLabels,
+  legalFormValues,
   maritalStatusLabels,
   maritalStatusValues,
 } from "./schemas";
@@ -44,6 +46,7 @@ export function EditContactForm({
     birthDate: Date | null;
     cspCategory: string | null;
     profession: string | null;
+    legalForm: string | null;
     address: string | null;
     postalCode: string | null;
     city: string | null;
@@ -161,6 +164,17 @@ export function EditContactForm({
               placeholder="Ex : ingénieur conseil, médecin, artisan boulanger…"
               defaultValue={contact.profession ?? ""}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="legalForm">Forme juridique de l&apos;entreprise</Label>
+            <NativeSelect id="legalForm" name="legalForm" defaultValue={contact.legalForm ?? ""}>
+              <option value="">Non renseignée</option>
+              {legalFormValues.map((value) => (
+                <option key={value} value={value}>
+                  {legalFormLabels[value]}
+                </option>
+              ))}
+            </NativeSelect>
           </div>
           <div className="space-y-2">
             <Label htmlFor="birthDate">Date de naissance</Label>
