@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { createNoteSchema } from "./schemas";
+import { createNoteSchema, updateNoteSchema } from "./schemas";
 
 export type NoteFormState = { error: string } | null;
 
@@ -57,4 +57,45 @@ export async function createNote(
 
   revalidatePath(`/contacts/${contact.id}`);
   return null;
+}
+
+export async function updateNote(
+  noteId: string,
+  _prevState: NoteFormState,
+  formData: FormData,
+): Promise<NoteFormState> {
+  const session = await requireUser();
+  if (!session.user.tenantId) {
+    return { error: "Aucun cabinet associé à votre compte." };
+  }
+
+  const existing = await prisma.note.findFirst({
+    where: { id: noteId, tenantId: session.user.tenantId, contact: contactWhere(session.user) },
+  });
+  if (!existing) {
+    return { error: "Note introuvable." };
+  }
+
+  const parsed = updateNoteSchema.safeParse({ content: formData.get("content") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  }
+
+  await prisma.note.update({ where: { id: noteId }, data: { content: parsed.data.content } });
+
+  revalidatePath(`/contacts/${existing.contactId}`);
+  return null;
+}
+
+export async function deleteNote(noteId: string): Promise<void> {
+  const session = await requireUser();
+  if (!session.user.tenantId) return;
+
+  const existing = await prisma.note.findFirst({
+    where: { id: noteId, tenantId: session.user.tenantId, contact: contactWhere(session.user) },
+  });
+  if (!existing) return;
+
+  await prisma.note.delete({ where: { id: noteId } });
+  revalidatePath(`/contacts/${existing.contactId}`);
 }

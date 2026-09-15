@@ -6,3 +6,9 @@ export const createNoteSchema = z.object({
 });
 
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
+
+export const updateNoteSchema = z.object({
+  content: z.string().trim().min(1, "La note ne peut pas être vide."),
+});
+
+export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;

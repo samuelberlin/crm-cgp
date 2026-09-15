@@ -35,6 +35,7 @@ model Tenant {
   products      Product[]
   subscriptions Subscription[]
   fiscalReminders FiscalReminder[]
+  familyMembers FamilyMember[]
 
   // Délais d'automatisation (en jours), configurables depuis Paramètres.
   firstContactDelayDays      Int @default(1)
@@ -153,6 +154,7 @@ model Contact {
   incomeItems   IncomeItem[]
   documents     Document[]
   subscriptions Subscription[]
+  familyMembers FamilyMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -160,6 +162,36 @@ model Contact {
   @@index([tenantId])
   @@index([advisorId])
   @@map("contact")
+}
+
+enum FamilyRelationship {
+  CONJOINT
+  ENFANT
+  AUTRE
+}
+
+// Conjoint/enfants du contact : sert notamment à désigner les bénéficiaires
+// d'un contrat d'assurance-vie (WealthItem.beneficiaries) sans ressaisir des
+// noms en texte libre à chaque contrat.
+model FamilyMember {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  firstName    String
+  lastName     String
+  relationship FamilyRelationship
+
+  beneficiaryOf WealthItem[] @relation("WealthItemBeneficiaries")
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("family_member")
 }
 
 enum OpportunityCategory {
@@ -393,6 +425,12 @@ model WealthItem {
   category WealthCategory
   label    String?
   amount   Float
+
+  // Pertinent surtout pour une assurance-vie/contrat de capitalisation : date de
+  // signature du contrat, et bénéficiaires désignés (parmi les membres de la
+  // famille du contact) pour la clause bénéficiaire.
+  subscribedAt  DateTime?
+  beneficiaries FamilyMember[] @relation("WealthItemBeneficiaries")
 
   // Renseigné quand cet actif provient d'une souscription (Retraite/Épargne) : garde
   // le patrimoine synchronisé avec l'encours des produits réellement détenus par le client.

@@ -14,7 +14,7 @@ import {
   parseContactImportRow,
   type ContactImportRow,
 } from "./csvImport";
-import { createContactSchema, updateContactSchema } from "./schemas";
+import { contactStatusValues, createContactSchema, updateContactSchema } from "./schemas";
 import { parseXlsx } from "./xlsxImport";
 
 export type ContactFormState = { error: string } | null;
@@ -154,6 +154,20 @@ export async function deleteContact(contactId: string): Promise<void> {
   if (!existing) return;
 
   await prisma.contact.delete({ where: { id: contactId } });
+  revalidatePath("/contacts");
+}
+
+export async function updateContactStatus(
+  contactId: string,
+  status: (typeof contactStatusValues)[number],
+): Promise<void> {
+  const session = await requireUser();
+  if (!session.user.tenantId) return;
+
+  const existing = await prisma.contact.findFirst({ where: { id: contactId, ...contactWhere(session.user) } });
+  if (!existing || existing.status === status) return;
+
+  await prisma.contact.update({ where: { id: contactId }, data: { status } });
   revalidatePath("/contacts");
 }
 

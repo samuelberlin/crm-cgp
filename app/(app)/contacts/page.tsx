@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { contactStatusLabels, cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
+import { cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
+import { ContactStatusSelect } from "@/features/contacts/ContactStatusSelect";
 import { contactViewLabels, contactViewValues, contactViewWhere, type ContactView } from "@/features/contacts/views";
 import { subscriptionWhere } from "@/features/subscriptions/access";
 import { formatDate } from "@/lib/format";
@@ -150,7 +151,7 @@ export default async function ContactsPage({
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1.5">
-                    <Badge variant="outline">{contactStatusLabels[contact.status]}</Badge>
+                    <ContactStatusSelect contactId={contact.id} status={contact.status} />
                     {isInactive(contact, inactivityThreshold) && (
                       <Badge variant="destructive">Inactif</Badge>
                     )}

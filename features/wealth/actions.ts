@@ -23,6 +23,8 @@ async function createWealthItem(
     category: formData.get("category"),
     label: formData.get("label"),
     amount: formData.get("amount"),
+    subscribedAt: formData.get("subscribedAt"),
+    beneficiaryIds: formData.getAll("beneficiaryIds"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
@@ -40,6 +42,16 @@ async function createWealthItem(
     return { error: "Contact introuvable." };
   }
 
+  // Les bénéficiaires doivent appartenir à ce même contact (jamais à un autre
+  // client du cabinet, même si son id a été trafiqué côté formulaire).
+  const beneficiaries =
+    parsed.data.beneficiaryIds.length > 0
+      ? await prisma.familyMember.findMany({
+          where: { id: { in: parsed.data.beneficiaryIds }, contactId: contact.id },
+          select: { id: true },
+        })
+      : [];
+
   await prisma.wealthItem.create({
     data: {
       tenantId: session.user.tenantId,
@@ -48,6 +60,8 @@ async function createWealthItem(
       category: parsed.data.category,
       label: parsed.data.label,
       amount: parsed.data.amount,
+      subscribedAt: parsed.data.subscribedAt ? new Date(parsed.data.subscribedAt) : undefined,
+      beneficiaries: beneficiaries.length > 0 ? { connect: beneficiaries } : undefined,
     },
   });
 

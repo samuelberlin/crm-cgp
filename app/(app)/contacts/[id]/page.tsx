@@ -19,6 +19,10 @@ import { taskPriorityLabels } from "@/features/tasks/schemas";
 import { StatusSelect as TaskStatusSelect } from "@/features/tasks/StatusSelect";
 import { StatusSelect as MeetingStatusSelect } from "@/features/agenda/StatusSelect";
 import { NoteQuickForm } from "@/features/notes/NoteQuickForm";
+import { EditableNote } from "@/features/notes/EditableNote";
+import { familyRelationshipLabels } from "@/features/family/schemas";
+import { AddFamilyMemberForm } from "@/features/family/AddFamilyMemberForm";
+import { DeleteFamilyMemberButton } from "@/features/family/DeleteFamilyMemberButton";
 import { wealthTotals } from "@/features/wealth/calc";
 import { assetCategoryValues, liabilityCategoryValues, wealthCategoryLabels } from "@/features/wealth/schemas";
 import { createAsset, createLiability } from "@/features/wealth/actions";
@@ -58,10 +62,11 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
         tasks: { orderBy: { dueDate: "asc" } },
         meetings: { orderBy: { date: "desc" } },
         contactNotes: { orderBy: { createdAt: "desc" }, include: { user: true } },
-        wealthItems: { orderBy: { createdAt: "desc" } },
+        wealthItems: { orderBy: { createdAt: "desc" }, include: { beneficiaries: true } },
         incomeItems: { orderBy: { createdAt: "desc" } },
         documents: { orderBy: { createdAt: "desc" } },
         subscriptions: { orderBy: { subscribedAt: "desc" }, include: { product: true } },
+        familyMembers: { orderBy: { createdAt: "asc" } },
       },
     }),
     session.user.tenantId
@@ -216,6 +221,30 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
           </CardContent>
         </Card>
 
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Famille</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {contact.familyMembers.length > 0 && (
+              <ul className="space-y-1.5 text-sm">
+                {contact.familyMembers.map((member) => (
+                  <li key={member.id} className="flex items-center justify-between gap-2">
+                    <span>
+                      {member.firstName} {member.lastName}
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        ({familyRelationshipLabels[member.relationship]})
+                      </span>
+                    </span>
+                    <DeleteFamilyMemberButton memberId={member.id} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <AddFamilyMemberForm contactId={contact.id} />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Tâches</CardTitle>
@@ -279,12 +308,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             {contact.contactNotes.length > 0 && (
               <ul className="space-y-3 border-t pt-3 text-sm">
                 {contact.contactNotes.map((note) => (
-                  <li key={note.id}>
-                    <p className="whitespace-pre-wrap">{note.content}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {note.user?.name ?? "—"} · {formatDateTime(note.createdAt)}
-                    </p>
-                  </li>
+                  <EditableNote
+                    key={note.id}
+                    noteId={note.id}
+                    content={note.content}
+                    authorName={note.user?.name ?? "—"}
+                    createdAt={formatDateTime(note.createdAt)}
+                  />
                 ))}
               </ul>
             )}
@@ -342,6 +372,14 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                         {item.subscriptionId && (
                           <span className="ml-1.5 text-xs text-muted-foreground">(produit souscrit)</span>
                         )}
+                        {(item.subscribedAt || item.beneficiaries.length > 0) && (
+                          <span className="block text-xs text-muted-foreground">
+                            {item.subscribedAt && `Souscrit le ${formatDate(item.subscribedAt)}`}
+                            {item.subscribedAt && item.beneficiaries.length > 0 && " · "}
+                            {item.beneficiaries.length > 0 &&
+                              `Bénéficiaires : ${item.beneficiaries.map((b) => `${b.firstName} ${b.lastName}`).join(", ")}`}
+                          </span>
+                        )}
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
                         {formatCurrency(item.amount)}
@@ -356,6 +394,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 categories={assetCategoryValues}
                 action={createAsset}
                 submitLabel="Ajouter un actif"
+                familyMembers={contact.familyMembers}
               />
             </div>
 

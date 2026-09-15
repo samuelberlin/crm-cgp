@@ -69,6 +69,20 @@ test.describe("tasks, agenda, and notes", () => {
     await page.getByRole("button", { name: "Ajouter la note" }).click();
     await expect(page.getByText("Souhaite investir 50k€ avant décembre.").first()).toBeVisible();
     await expect(page.getByText(/Note : Souhaite investir/)).toBeVisible();
+
+    // Une note existante peut être modifiée...
+    const noteItem = page.locator("li", { hasText: "Souhaite investir 50k€ avant décembre." });
+    await noteItem.getByRole("button", { name: "Modifier" }).click();
+    await noteItem.locator("textarea").fill("Souhaite investir 80k€ avant janvier.");
+    await noteItem.getByRole("button", { name: "Enregistrer" }).click();
+    // Le libellé dans la timeline garde le texte d'origine (horodaté à la création,
+    // jamais réécrit) : seule la note elle-même doit refléter la modification.
+    const editedNoteItem = page.locator("li", { hasText: "Souhaite investir 80k€ avant janvier." });
+    await expect(editedNoteItem).toBeVisible();
+
+    // ... ou supprimée.
+    await editedNoteItem.getByRole("button", { name: "Supprimer" }).click();
+    await expect(page.getByText("Souhaite investir 80k€ avant janvier.")).toHaveCount(0);
   });
 
   test("a CGP only sees their own tasks, an ADMIN sees the whole cabinet", async ({ page }) => {

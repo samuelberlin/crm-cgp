@@ -28,6 +28,10 @@ export const assetCategoryValues = [
 
 export const liabilityCategoryValues = ["CREDIT", "AUTRE_DETTE"] as const;
 
+// Catégories pour lesquelles la date de souscription et les bénéficiaires (clause
+// bénéficiaire) ont du sens : assurance-vie et contrat de capitalisation.
+export const beneficiaryCategoryValues = ["ASSURANCE_VIE", "CONTRAT_CAPITALISATION"] as const;
+
 export const wealthCategoryLabels: Record<
   | (typeof assetCategoryValues)[number]
   | (typeof liabilityCategoryValues)[number]
@@ -71,6 +75,8 @@ export const createWealthItemSchema = z.object({
   category: z.enum([...assetCategoryValues, ...liabilityCategoryValues]),
   label: z.preprocess(emptyToUndefined, z.string().trim().optional()),
   amount: z.coerce.number().positive("Le montant doit être positif."),
+  subscribedAt: z.preprocess(emptyToUndefined, z.iso.date().optional()),
+  beneficiaryIds: z.array(z.string().trim().min(1)).default([]),
 });
 
 export type CreateWealthItemInput = z.infer<typeof createWealthItemSchema>;

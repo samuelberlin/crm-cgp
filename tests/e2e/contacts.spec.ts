@@ -39,6 +39,14 @@ test.describe("contacts", () => {
 
     await page.goto("/contacts");
     await expect(page.getByRole("link", { name: "Marc Petit" })).toBeVisible();
+
+    // Le statut se change directement depuis la liste, sans passer par la fiche.
+    const row = page.locator("tr", { hasText: "Marc Petit" });
+    await expect(row.locator("select")).toHaveValue("CLIENT");
+    await row.locator("select").selectOption("ANCIEN_CLIENT");
+    await page.waitForTimeout(300);
+    await page.reload();
+    await expect(page.locator("tr", { hasText: "Marc Petit" }).locator("select")).toHaveValue("ANCIEN_CLIENT");
   });
 
   test("deletes a prospect and a client from their detail page", async ({ page }) => {
