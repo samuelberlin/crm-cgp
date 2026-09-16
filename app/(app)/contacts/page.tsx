@@ -5,24 +5,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/features/auth/session";
 import { contactWhere } from "@/features/contacts/access";
-import { cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
+import { contactStatusLabels, contactStatusValues, cspCategoryLabels, cspCategoryValues } from "@/features/contacts/schemas";
 import { ContactStatusSelect } from "@/features/contacts/ContactStatusSelect";
 import { contactViewLabels, contactViewValues, contactViewWhere, type ContactView } from "@/features/contacts/views";
 import { subscriptionWhere } from "@/features/subscriptions/access";
 import { formatDate } from "@/lib/format";
 import { isInactive } from "@/features/automations/inactivity";
-import type { CspCategory } from "@/lib/generated/prisma/enums";
+import type { ContactStatus, CspCategory } from "@/lib/generated/prisma/enums";
 
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; csp?: string; product?: string }>;
+  searchParams: Promise<{ view?: string; status?: string; csp?: string; product?: string }>;
 }) {
   const session = await requireUser();
-  const { view: rawView, csp: rawCsp, product: rawProduct } = await searchParams;
+  const { view: rawView, status: rawStatus, csp: rawCsp, product: rawProduct } = await searchParams;
   const view: ContactView = (contactViewValues as readonly string[]).includes(rawView ?? "")
     ? (rawView as ContactView)
     : "tous";
+  const status = (contactStatusValues as readonly string[]).includes(rawStatus ?? "")
+    ? (rawStatus as ContactStatus)
+    : undefined;
   const cspCategory = (cspCategoryValues as readonly string[]).includes(rawCsp ?? "")
     ? (rawCsp as CspCategory)
     : undefined;
@@ -30,7 +33,7 @@ export default async function ContactsPage({
 
   const [contacts, tenant, presentCspCategories, heldProducts] = await Promise.all([
     prisma.contact.findMany({
-      where: { ...contactWhere(session.user), ...contactViewWhere(view, { cspCategory, productId }) },
+      where: { ...contactWhere(session.user), ...contactViewWhere(view, { status, cspCategory, productId }) },
       include: { advisor: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
@@ -92,6 +95,20 @@ export default async function ContactsPage({
           </Link>
         ))}
       </div>
+
+      {view === "statut" && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {contactStatusValues.map((value) => (
+            <Link
+              key={value}
+              href={`/contacts?view=statut&status=${value}`}
+              className={buttonVariants({ variant: value === status ? "default" : "outline", size: "sm" })}
+            >
+              {contactStatusLabels[value]}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {view === "csp" && (
         <div className="mb-4 flex flex-wrap gap-1.5">

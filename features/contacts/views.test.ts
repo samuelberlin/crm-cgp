@@ -6,9 +6,12 @@ describe("contactViewWhere", () => {
     expect(contactViewWhere("tous")).toEqual({});
   });
 
-  it("filters by status for 'clients' and 'prospects'", () => {
-    expect(contactViewWhere("clients")).toEqual({ status: "CLIENT" });
-    expect(contactViewWhere("prospects")).toEqual({ status: "PROSPECT" });
+  it("only filters by status once one is chosen for 'statut'", () => {
+    expect(contactViewWhere("statut")).toEqual({});
+    expect(contactViewWhere("statut", { status: "CLIENT" })).toEqual({ status: "CLIENT" });
+    expect(contactViewWhere("statut", { status: "PROSPECT" })).toEqual({ status: "PROSPECT" });
+    expect(contactViewWhere("statut", { status: "ANCIEN_CLIENT" })).toEqual({ status: "ANCIEN_CLIENT" });
+    expect(contactViewWhere("statut", { status: "PARTENAIRE" })).toEqual({ status: "PARTENAIRE" });
   });
 
   it("only filters by CSP category once one is chosen for 'csp'", () => {

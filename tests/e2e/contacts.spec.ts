@@ -47,6 +47,14 @@ test.describe("contacts", () => {
     await page.waitForTimeout(300);
     await page.reload();
     await expect(page.locator("tr", { hasText: "Marc Petit" }).locator("select")).toHaveValue("ANCIEN_CLIENT");
+
+    // L'onglet Statut filtre sur n'importe quelle valeur, pas seulement Client/Prospect.
+    await page.goto("/contacts?view=statut&status=ANCIEN_CLIENT");
+    await expect(page.getByRole("link", { name: "Marc Petit" })).toBeVisible();
+    await page.goto("/contacts?view=statut&status=CLIENT");
+    await expect(page.getByRole("link", { name: "Marc Petit" })).toHaveCount(0);
+    await page.goto("/contacts?view=statut&status=PROSPECT");
+    await expect(page.getByRole("link", { name: "Marc Petit" })).toHaveCount(0);
   });
 
   test("deletes a prospect and a client from their detail page", async ({ page }) => {
